@@ -117,6 +117,7 @@ def driver_can_create_copy(drivername):
     """Return True if the driver has CREATE_COPY capability"""
     return driver_supports_mode(drivername, 'DCAP_CREATECOPY')
 
+
 cdef _band_dtype(GDALRasterBandH band):
     """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
     cdef const char * ptype

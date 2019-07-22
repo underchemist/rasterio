@@ -182,61 +182,12 @@ def test_write_crs_transform(tmpdir):
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
-            crs={'units': 'm', 'no_defs': True, 'ellps': 'WGS84',
-                 'proj': 'utm', 'zone': 18},
+            crs="EPSG:32618",
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
     assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
-    # make sure that pixel size is nearly the same as transform
-    # (precision varies slightly by platform)
-    assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
-
-
-@pytest.mark.gdalbin
-def test_write_crs_transform_affine(tmpdir):
-    name = str(tmpdir.join("test_write_crs_transform.tif"))
-    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
-                              0.0, -300.041782729805, 2826915.0)
-    with rasterio.open(
-            name, 'w',
-            driver='GTiff', width=100, height=100, count=1,
-            crs={'units': 'm', 'no_defs': True, 'ellps': 'WGS84',
-                 'proj': 'utm', 'zone': 18},
-            transform=transform,
-            dtype=rasterio.ubyte) as s:
-        s.write(a, indexes=1)
-
-    assert s.crs.to_epsg() == 32618
-    info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
-    # make sure that pixel size is nearly the same as transform
-    # (precision varies slightly by platform)
-    assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
-
-
-@pytest.mark.gdalbin
-def test_write_crs_transform_2(tmpdir, monkeypatch):
-    """Using 'EPSG:32618' as CRS."""
-    monkeypatch.delenv('GDAL_DATA', raising=False)
-    name = str(tmpdir.join("test_write_crs_transform.tif"))
-    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
-                              0.0, -300.041782729805, 2826915.0)
-    with rasterio.open(
-            name, 'w',
-            driver='GTiff', width=100, height=100, count=1,
-            crs='EPSG:32618',
-            transform=transform,
-            dtype=rasterio.ubyte) as s:
-        s.write(a, indexes=1)
-
-    assert s.crs.to_epsg() == 32618
-    info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'UTM zone 18N' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
@@ -259,7 +210,7 @@ def test_write_crs_transform_3(tmpdir):
         s.write(a, indexes=1)
     assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
+    assert '"UTM Zone 18' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)

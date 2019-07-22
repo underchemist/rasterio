@@ -1,3 +1,4 @@
+# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 """Coordinate reference systems, class and functions.
 """
 
@@ -14,6 +15,11 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 
 
 log = logging.getLogger(__name__)
+
+
+def gdal_version():
+    """Return the version as a major.minor.patchlevel string."""
+    return GDALVersionInfo("RELEASE_NAME")
 
 
 cdef class _CRS(object):
@@ -70,8 +76,8 @@ cdef class _CRS(object):
         except CPLE_BaseError as exc:
             raise CRSError("{}".format(exc))
         else:
-            units_b = units_c
-            return units_b.decode('utf-8')
+            val = units_c
+            return val
 
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_s = NULL
@@ -112,7 +118,8 @@ cdef class _CRS(object):
         cdef char *conv_wkt = NULL
 
         try:
-            if morph_to_esri_dialect:
+            # Esri morphing no longer applies for GDAL 3+.
+            if morph_to_esri_dialect and gdal_version().startswith("2"):
                 exc_wrap_ogrerr(OSRMorphToESRI(self._osr))
 
             exc_wrap_ogrerr(OSRExportToWkt(self._osr, &conv_wkt))
@@ -121,7 +128,8 @@ cdef class _CRS(object):
             raise CRSError("Cannot convert to WKT. {}".format(exc))
 
         else:
-            return conv_wkt.decode('utf-8')
+            val = conv_wkt
+            return val
 
         finally:
             CPLFree(conv_wkt)
@@ -142,7 +150,7 @@ cdef class _CRS(object):
             if OSRAutoIdentifyEPSG(osr) == 0:
                 epsg_code = OSRGetAuthorityCode(osr, NULL)
                 if epsg_code != NULL:
-                    return int(epsg_code.decode('utf-8'))
+                    return int(epsg_code)
                 else:
                     return None
             else:
@@ -348,14 +356,12 @@ cdef class _CRS(object):
             raise CRSError("The WKT could not be parsed. {}".format(exc))
 
         else:
-            proj_b = proj_c
-            proj = proj_b.decode('utf-8')
+            parts = [o.lstrip('+') for o in proj_c.strip().split()]
 
         finally:
             CPLFree(proj_c)
             _safe_osr_release(osr)
 
-        parts = [o.lstrip('+') for o in proj.strip().split()]
 
         def parse(v):
             if v in ('True', 'true'):

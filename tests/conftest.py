@@ -10,7 +10,6 @@ import zipfile
 
 import affine
 from click.testing import CliRunner
-import py
 import pytest
 import numpy as np
 
@@ -600,3 +599,7 @@ requires_gdal21 = pytest.mark.skipif(
 requires_gdal22 = pytest.mark.skipif(
     not gdal_version.at_least('2.2'),
     reason="Requires GDAL 2.2.x")
+
+requires_gdal_lt_3 = pytest.mark.skipif(
+    not gdal_version.major < 3,
+    reason="Requires GDAL version < 3.0")

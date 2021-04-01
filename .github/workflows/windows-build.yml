@@ -1,0 +1,17 @@
+name: Windows Builds
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        targetplatform: [x64]
+        python-version: [3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions:setup-python@v2
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"

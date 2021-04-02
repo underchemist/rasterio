@@ -42,6 +42,7 @@ jobs:
             pip install wheel delvewheel
             pip wheel --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
-            delvewheel show -v --add-path $env:SDK_PREFIX\bin rasterio*.whl
-            # delvewheel repair -v --add-path $env:SDK_PREFIX\bin rasterio*.whl
+            $wheel = get-ChildItem rasterio*whl | Select-Object -Expand BaseName
+            delvewheel show -v --add-path $env:SDK_PREFIX\bin $wheel
+            # delvewheel repair -v --add-path $env:SDK_PREFIX\bin $wheel
             dir

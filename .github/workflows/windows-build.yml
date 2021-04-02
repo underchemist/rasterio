@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.targetplatform }}
       - name: build
         shell: pwsh
         run: |
@@ -32,5 +33,5 @@ jobs:
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
             dir
-            cd $env:SDK-$env:SDK_ARCH
+            cd "$env:SDK-${{ matrix.targetplatform }}"
             dir

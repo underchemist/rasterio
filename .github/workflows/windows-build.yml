@@ -38,4 +38,5 @@ jobs:
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
+            cd ../
             pip install .

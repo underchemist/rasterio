@@ -31,5 +31,6 @@ jobs:
             mkdir sdk
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
+            dir
             cd $env:SDK-$env:SDK_ARCH
             dir

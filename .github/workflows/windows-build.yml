@@ -39,4 +39,9 @@ jobs:
             $env:LIB="$env:SDK_PREFIX\lib"
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
             cd ../
-            pip install .
+            pip install wheel delvewheel
+            pip wheel --no-deps .
+            $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
+            delvewheel show -v --add-path $env:SDK_PREFIX\bin rasterio*.whl
+            # delvewheel repair -v --add-path $env:SDK_PREFIX\bin rasterio*.whl
+            dir

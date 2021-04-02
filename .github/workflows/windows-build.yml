@@ -9,11 +9,25 @@ jobs:
       matrix:
         targetplatform: [x64]
         python-version: [3.7]
+        sdk-version: [x64-dev]
+    env:
+      SDK_ARCH: ${{ matrix.sdk-version }}
+      SDK: release-1911
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Display Python version
-        run: python -c "import sys; print(sys.version)"
+      - name: build
+        shell: pwsh
+        run: |
+            $env:SDK_ZIP="$env:SDK-$env:SDK_ARCH.zip"
+            $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
+            if(-Not (Test-Path -Path downloads)) { mkdir downloads }
+            cd downloads
+            if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
+            cd ..
+            mkdir sdk
+            exec { 7z x ..\downloads\$env:SDK_ZIP }
+            cd $env:SDK

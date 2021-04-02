@@ -22,7 +22,7 @@ jobs:
       - name: build
         shell: pwsh
         run: |
-            if(${{ matrix.targetplatform }} -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
             $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
             $env:SDK_UNZIP_DIR="$env:SDK$env:SDK_ARCH"
             $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"

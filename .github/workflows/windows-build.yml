@@ -7,9 +7,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x64]
+        targetplatform: [x64, x86]
         python-version: [3.7]
-        sdk-version: [x64-dev]
     env:
       SDK_ARCH: ${{ matrix.sdk-version }}
       SDK: release-1911
@@ -23,7 +22,9 @@ jobs:
       - name: build
         shell: pwsh
         run: |
-            $env:SDK_ZIP="$env:SDK-$env:SDK_ARCH.zip"
+            if(${{ matrix.targetplatform }} -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
+            $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
+            $env:SDK_UNZIP_DIR="$env:SDK$env:SDK_ARCH"
             $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
             cd downloads

@@ -29,5 +29,5 @@ jobs:
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
             cd ..
             mkdir sdk
-            exec { 7z x ..\downloads\$env:SDK_ZIP }
+            7z x ..\downloads\$env:SDK_ZIP
             cd $env:SDK

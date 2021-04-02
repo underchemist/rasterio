@@ -7,11 +7,12 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x64, x86]
+        targetplatform: [x64]
         python-version: [3.7]
     env:
       SDK_ARCH: ${{ matrix.sdk-version }}
       SDK: release-1911
+      GDAL_VERSION: 3.2.2
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -33,6 +34,8 @@ jobs:
             mkdir sdk
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
-            dir
-            cd "$env:SDK-${{ matrix.targetplatform }}"
-            dir
+            $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
+            $env:INCLUDE="$env:SDK_PREFIX\include"
+            $env:LIB="$env:SDK_PREFIX\lib"
+            $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
+            pip install .

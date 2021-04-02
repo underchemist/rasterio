@@ -40,7 +40,7 @@ jobs:
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
             cd ../
             pip install wheel delvewheel
-            pip wheel --no-deps .
+            pip wheel --no-deps --wheel-dir=$env:GITHUB_WORKSPACE .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand BaseName
             delvewheel show -v --add-path $env:SDK_PREFIX\bin $wheel

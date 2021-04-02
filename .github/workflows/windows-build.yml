@@ -7,8 +7,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x64]
-        python-version: [3.7, 3.8, 3.9]
+        targetplatform: [x86, x64]
+        python-version: [3.6, 3.7, 3.8, 3.9]
     env:
       SDK_ARCH: ${{ matrix.sdk-version }}
       SDK: release-1911
@@ -45,7 +45,6 @@ jobs:
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
             # delvewheel show -v --add-path $env:SDK_PREFIX\bin $wheel
             delvewheel repair -v --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll" $wheel
-            dir
       - name: upload artifacts
         uses: actions/upload-artifact@v2
         with:

@@ -8,11 +8,11 @@ jobs:
     strategy:
       matrix:
         targetplatform: [x64]
-        python-version: [3.7]
+        python-version: [3.7, 3.8, 3.9]
     env:
       SDK_ARCH: ${{ matrix.sdk-version }}
       SDK: release-1911
-      GDAL_VERSION: 3.2.2
+      GDAL_VERSION: 3.2.1
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}

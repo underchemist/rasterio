@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.targetplatform }}
-      - name: setup envs
+      - name: setup environment
         shell: pwsh
         run: |
             if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
@@ -30,22 +30,20 @@ jobs:
             echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
             echo "SDK_UNZIP_DIR=$env:SDK_UNZIP_DIR" >> $env:GITHUB_ENV
             echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
+            mkdir $env:GITHUB_WORKSPACE/sdk
       - name: cache deps
         uses: actions/cache@v2
         id: cache
         with:
-          path: $env:GITHUB_WORKSPACES/sdk
+          path: $env:GITHUB_WORKSPACES/downloads
           key: ${{ runner.os }}-${{ matrix.targetplatform }}
       - name: download deps
-        if: steps.cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
             cd downloads
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
-            cd ..
-            mkdir sdk
-            cd sdk
+            cd ../sdk
             7z x ..\downloads\$env:SDK_ZIP
       - name: wheel
         shell: pwsh

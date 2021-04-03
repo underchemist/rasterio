@@ -20,13 +20,23 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.targetplatform }}
-      - name: build
+      - name: setup envs
         shell: pwsh
         run: |
             if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
             $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
             $env:SDK_UNZIP_DIR="$env:SDK$env:SDK_ARCH"
             $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
+      - name: cache deps
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: $env:GITHUB_WORKSPACES/sdk
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}
+      - name: download deps
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
             cd downloads
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
@@ -34,19 +44,22 @@ jobs:
             mkdir sdk
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
+      - name: wheel
+        shell: pwsh
+        run: |
+            cd $env:GITHUB_WORKSPACE
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
-            cd ../
             pip install wheel delvewheel
-            pip wheel --no-deps --wheel-dir=$env:GITHUB_WORKSPACE .
+            pip wheel --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
             # delvewheel show -v --add-path $env:SDK_PREFIX\bin $wheel
-            delvewheel repair -v --add-path $env:SDK_PREFIX\bin $wheel
+            delvewheel repair -v --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel
       - name: upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.python-version}}-${{ matrix.targetplatform }}
+          name: rasterio-wheel-py${{ matrix.python-version}}-${{ matrix.targetplatform }}
           path: wheelhouse/rasterio*.whl

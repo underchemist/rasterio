@@ -43,7 +43,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-            dir sdk
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
             cd downloads
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }

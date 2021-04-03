@@ -36,13 +36,15 @@ jobs:
         uses: actions/cache@v2
         id: cache
         with:
-          path: $env:GITHUB_WORKSPACES/downloads
+          path: $env:GITHUB_WORKSPACES/sdk
           key: ${{ runner.os }}-${{ matrix.targetplatform }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.targetplatform }}
       - name: download deps
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
+            dir sdk
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
             cd downloads
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
@@ -56,9 +58,6 @@ jobs:
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
-            #debug
-            printenv
-            dir $env:GITHUB_WORKSPACE/sdk
             pip install wheel delvewheel
             pip wheel --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"

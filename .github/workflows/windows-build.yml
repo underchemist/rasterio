@@ -38,6 +38,8 @@ jobs:
         with:
           path: $env:GITHUB_WORKSPACES/downloads
           key: ${{ runner.os }}-${{ matrix.targetplatform }}
+          restore-ley: |
+            ${{ runner.os }}-${{ matrix.targetplatform }}
       - name: download deps
         shell: pwsh
         run: |

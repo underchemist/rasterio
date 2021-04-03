@@ -48,6 +48,7 @@ jobs:
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
             cd ..
             if(-Not (Test-Path -Path sdk)) { mkdir sdk }
+            cd sdk
             7z x ..\downloads\$env:SDK_ZIP
       - name: wheel
         shell: pwsh

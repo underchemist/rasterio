@@ -49,6 +49,9 @@ jobs:
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
+            #debug
+            printenv
+            dir $env:GITHUB_WORKSPACE/sdk
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"

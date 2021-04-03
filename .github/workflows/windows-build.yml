@@ -49,13 +49,13 @@ jobs:
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
-            #debug
-            printenv
-            dir $env:GITHUB_WORKSPACE/sdk
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
+            #debug
+            printenv
+            dir $env:GITHUB_WORKSPACE/sdk
             pip install wheel delvewheel
             pip wheel --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"

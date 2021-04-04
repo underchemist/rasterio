@@ -36,9 +36,7 @@ jobs:
         id: cache
         with:
           path: $env:GITHUB_WORKSPACES/sdk
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v2
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.targetplatform }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v3
       - name: download deps
         if: steps.cache.outputs.cache-hit != 'true'
         shell: pwsh
@@ -48,6 +46,7 @@ jobs:
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
             cd ..
             if(-Not (Test-Path -Path sdk)) { mkdir sdk }
+            dir sdk
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
       - name: wheel

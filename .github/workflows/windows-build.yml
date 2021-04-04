@@ -42,7 +42,8 @@ jobs:
         uses: actions/cache@v2
         id: cache-gisinternals
         with:
-          path: $env:GITHUB_WORKSPACE\sdk\*
+          path: |
+            $env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH
           key: ${{ runner.os }}-${{ matrix.targetplatform }}-v12
       - name: debug
         run: |
@@ -79,7 +80,7 @@ jobs:
         uses: actions/cache@v2
         id: cache-gisinternals
         with:
-          path: $env:GITHUB_WORKSPACE\sdk\*
+          path: $env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH
           key: ${{ runner.os }}-${{ matrix.targetplatform }}-v12
       - name: debug2
         run: |

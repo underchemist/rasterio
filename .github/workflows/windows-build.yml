@@ -44,7 +44,7 @@ jobs:
         with:
           path: |
             $env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v12
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v13
       - name: debug
         run: |
             dir $env:GITHUB_WORKSPACE\sdk
@@ -81,7 +81,7 @@ jobs:
         id: cache-gisinternals
         with:
           path: $env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v12
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v13
       - name: debug2
         run: |
             if(-Not (Test-Path -Path $env:GITHUB_WORKSPACE\sdk)) { write-host "no sdk dir" } else { dir $env:GITHUB_WORKSPACE\sdk}

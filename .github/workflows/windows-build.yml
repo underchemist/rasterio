@@ -30,10 +30,14 @@ jobs:
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
             cd ..
             if(-Not (Test-Path -Path sdk)) { mkdir sdk }
+            write-host "test1"
             dir $env:GITHUB_WORKSPACE
-            dir $env:GITHUB_WORKSPACE/sdk
+            write-host "test2"
+            dir $env:GITHUB_WORKSPACE\sdk
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
+            write-host "test3"
+            dir $env:GITHUB_WORKSPACE\sdk
       - name: cache deps
         uses: actions/cache@v2
         id: cache-gisinternals
@@ -78,7 +82,6 @@ jobs:
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
-            dir sdk
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"

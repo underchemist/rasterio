@@ -38,7 +38,7 @@ jobs:
         id: cache-gisinternals
         with:
           path: $env:GITHUB_WORKSPACES/sdk
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v6
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v7
   build:
     needs: deps
     name: Build Wheels
@@ -72,7 +72,7 @@ jobs:
         id: cache-gisinternals
         with:
           path: $env:GITHUB_WORKSPACES/sdk
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v6
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v7
       - name: wheel
         shell: pwsh
         run: |
@@ -86,7 +86,6 @@ jobs:
             pip wheel --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
-            # delvewheel show -v --add-path $env:SDK_PREFIX\bin $wheel
             delvewheel repair -v --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel
       - name: upload artifacts
         uses: actions/upload-artifact@v2

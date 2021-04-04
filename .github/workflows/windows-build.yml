@@ -21,16 +21,6 @@ jobs:
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
             echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
             echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
-      - name: download deps
-        shell: pwsh
-        run: |
-            if(-Not (Test-Path -Path downloads)) { mkdir downloads }
-            cd downloads
-            if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
-            cd ..
-            if(-Not (Test-Path -Path sdk)) { mkdir sdk }
-            cd sdk
-            7z x ..\downloads\$env:SDK_ZIP
       - name: get cache dir
         id: get-cache-dir
         run: echo "::set-output name=dir::$env:GITHUB_WORKSPACE\sdk"
@@ -41,6 +31,17 @@ jobs:
           path: |
             ${{ steps.get-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-${{ matrix.targetplatform }}
+      - name: download deps
+        if: steps.cache-gisinternals.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+            if(-Not (Test-Path -Path downloads)) { mkdir downloads }
+            cd downloads
+            if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
+            cd ..
+            if(-Not (Test-Path -Path sdk)) { mkdir sdk }
+            cd sdk
+            7z x ..\downloads\$env:SDK_ZIP
   build:
     needs: deps
     name: Build Wheels

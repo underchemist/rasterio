@@ -81,6 +81,9 @@ jobs:
         with:
           path: $env:GITHUB_WORKSPACE\sdk
           key: ${{ runner.os }}-${{ matrix.targetplatform }}-v10
+      - name: debug2
+        run: |
+            if(-Not (Test-Path -Path $env:GITHUB_WORKSPACE\sdk)) { write-host "no sdk dir" } else { dir $env:GITHUB_WORKSPACE\sdk}
       - name: wheel
         shell: pwsh
         run: |

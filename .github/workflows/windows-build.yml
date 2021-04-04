@@ -31,12 +31,6 @@ jobs:
             echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
             echo "SDK_UNZIP_DIR=$env:SDK_UNZIP_DIR" >> $env:GITHUB_ENV
             echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
-      - name: cache deps
-        uses: actions/cache@v2
-        id: cache
-        with:
-          path: $env:GITHUB_WORKSPACES/sdk
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v3
       - name: download deps
         if: steps.cache.outputs.cache-hit != 'true'
         shell: pwsh
@@ -49,10 +43,17 @@ jobs:
             dir sdk
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
+      - name: cache deps
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: $env:GITHUB_WORKSPACES/sdk
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v4
       - name: wheel
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
+            dir sdk
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"

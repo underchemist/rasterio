@@ -42,8 +42,11 @@ jobs:
         uses: actions/cache@v2
         id: cache-gisinternals
         with:
-          path: ~\sdk
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v9
+          path: $env:GITHUB_WORKSPACE\sdk
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v10
+      - name: debug
+        run: |
+            dir $env:GITHUB_WORKSPACE\sdk
   build:
     needs: deps
     name: Build Wheels
@@ -76,8 +79,8 @@ jobs:
         uses: actions/cache@v2
         id: cache-gisinternals
         with:
-          path: ~\sdk
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v9
+          path: $env:GITHUB_WORKSPACE\sdk
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v10
       - name: wheel
         shell: pwsh
         run: |

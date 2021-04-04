@@ -3,7 +3,45 @@ name: Windows Builds
 on: workflow_dispatch
 
 jobs:
+  deps:
+    name: Download SDK
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        targetplatform: [x86, x64]
+    env:
+      SDK_ARCH: ${{ matrix.sdk-version }}
+      SDK: release-1911
+    steps:
+      - name: setup environment
+        shell: pwsh
+        run: |
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
+            $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
+            $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
+            echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
+            echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
+            echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
+      - name: cache deps
+        uses: actions/cache@v2
+        id: cache-gisinternals
+        with:
+          path: $env:GITHUB_WORKSPACES/sdk
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v5
+      - name: download deps
+        shell: pwsh
+        run: |
+            if(-Not (Test-Path -Path downloads)) { mkdir downloads }
+            cd downloads
+            if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
+            cd ..
+            if(-Not (Test-Path -Path sdk)) { mkdir sdk }
+            dir sdk
+            cd sdk
+            7z x ..\downloads\$env:SDK_ZIP
   build:
+    needs: deps
+    name: Build Wheels
     runs-on: windows-latest
     strategy:
       matrix:
@@ -25,30 +63,10 @@ jobs:
         run: |
             if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
             $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
-            $env:SDK_UNZIP_DIR="$env:SDK$env:SDK_ARCH"
             $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
             echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
-            echo "SDK_UNZIP_DIR=$env:SDK_UNZIP_DIR" >> $env:GITHUB_ENV
             echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
-      - name: cache deps
-        uses: actions/cache@v2
-        id: cache
-        with:
-          path: $env:GITHUB_WORKSPACES/sdk
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v5
-      - name: download deps
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-            if(-Not (Test-Path -Path downloads)) { mkdir downloads }
-            cd downloads
-            if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
-            cd ..
-            if(-Not (Test-Path -Path sdk)) { mkdir sdk }
-            dir sdk
-            cd sdk
-            7z x ..\downloads\$env:SDK_ZIP
       - name: wheel
         shell: pwsh
         run: |

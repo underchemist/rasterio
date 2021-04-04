@@ -30,7 +30,8 @@ jobs:
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
             cd ..
             if(-Not (Test-Path -Path sdk)) { mkdir sdk }
-            dir sdk
+            dir $env:GITHUB_WORKSPACE
+            dir $env:GITHUB_WORKSPACE/sdk
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
       - name: cache deps

@@ -97,7 +97,7 @@ jobs:
       - name: test
         run: |
             pip install pytest 
-            mkir tmp
+            mkdir tmp
             cd tmp
             Copy-Item  -Path "..\tests" -Destination "." -Recurse
             pytest -vv tests

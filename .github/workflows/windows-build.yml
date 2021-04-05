@@ -99,5 +99,5 @@ jobs:
             pip install pytest 
             mkir tmp
             cd tmp
-            cp ../tests .
+            Copy-Item  -Path "..\tests" -Destination "." -Recurse
             pytest -vv tests

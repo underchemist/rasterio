@@ -63,7 +63,6 @@ jobs:
             if(-Not (Test-Path -Path gdal-build)) { mkdir gdal-build }
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
-            Remove-Item "$"
             cd ..\proj-build
             7z x ..\downloads\$env:PROJ_ZIP
             Copy-Item -Path "$($env:PROJ_ZIP -replace ".zip")/*" -Destination "." -Recurse

@@ -8,9 +8,12 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x86, x64]
+        targetplatform: [x64]
     env:
       SDK: release-1911
+      GDAL_VERSION: 3.2.2
+      PROJ_VERSION: 7.2.1
+      OSGEO_URL: http://download.osgeo.org
     steps:
       - name: setup environment
         shell: pwsh
@@ -18,18 +21,32 @@ jobs:
             if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
             $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
             $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
+            $env:PROJ_ZIP="proj-$env:PROJ_VERSION.zip"
+            $env:PROJ_URL="$env:OSGEO_URL/proj/$env:PROJ_ZIP"
+            $gdalversionstripped = $env:GDAL_VERSION -replace "\."
+            $env:GDAL_ZIP="gdal$gdalversionstripped.zip"
+            $env:GDAL_URL="$env:OSGEO_URL/gdal/$env:GDAL_VERSION/$env:GDAL_ZIP"
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
             echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
             echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
-      - name: get cache dir
-        id: get-cache-dir
-        run: echo "::set-output name=dir::$env:GITHUB_WORKSPACE\sdk"
+            echo "PROJ_ZIP=$env:PROJ_ZIP" >> $env:GITHUB_ENV
+            echo "PROJ_URL=$env:PROJ_URL" >> $env:GITHUB_ENV
+            echo "GDAL_ZIP=$env:GDAL_ZIP" >> $env:GITHUB_ENV
+            echo "GDAL_URL=$env:GDAL_URL" >> $env:GITHUB_ENV
+      - name: get cache dirs
+        id: get-cache-dirs
+        run: |
+          echo "::set-output name=gisinternals-dir::$env:GITHUB_WORKSPACE\sdk"
+          echo "::set-output name=proj-dir::$env:GITHUB_WORKSPACE\proj-install"
+          echo "::Set-output name=gdal-dir::$env:GITHUB_WORKSPACE\gdal-install"
       - name: cache deps
         uses: actions/cache@v2
         id: cache-gisinternals
         with:
           path: |
-            ${{ steps.get-cache-dir.outputs.dir }}
+            ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
+            ${{ steps.get-cache-dirs.outputs.proj-dir }}
+            ${{ steps.get-cache-dirs.outputs.gdal-dir }}
           key: ${{ runner.os }}-${{ matrix.targetplatform }}
       - name: download deps
         if: steps.cache-gisinternals.outputs.cache-hit != 'true'
@@ -38,21 +55,34 @@ jobs:
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
             cd downloads
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
+            if(-Not (Test-Path -Path $env:PROJ_ZIP )) { Invoke-WebRequest "$env:PROJ_URL" -OutFile "$env:PROJ_ZIP" }
+            if(-Not (Test-Path -Path $env:GDAL_ZIP )) { Invoke-WebRequest "$env:GDAL_URL" -OutFile "$env:GDAL_ZIP" }
             cd ..
             if(-Not (Test-Path -Path sdk)) { mkdir sdk }
+            if(-Not (Test-Path -Path proj-install)) { mkdir proj-install }
+            if(-Not (Test-Path -Path gdal-install)) { mkdir gdal-install }
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
+            cd ..
+            cd proj-install
+            7z x ..\downloads\$env:PROJ_ZIP
+            cd ..
+            cd gdal-install
+            7z x ..\downloads\$env:GDAL_ZIP
+            dir $env:GITHUB_WORKSPACE\proj-install
+            dir $env:GITHUB_WORKSPACE\gdal-install
   build:
     needs: deps
     name: Build Wheels
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x86, x64]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        targetplatform: [x64]
+        python-version: [3.7]
     env:
       SDK: release-1911
-      GDAL_VERSION: 3.2.1
+      GDAL_VERSION: 3.2.2
+      PROJ_VERSION: 7.2.1
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}

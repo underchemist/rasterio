@@ -119,7 +119,7 @@ jobs:
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
             pip install wheel delvewheel
             $env:GDAL_DATA="$env:SDK_PREFIX\bin\gdal-data"
-            $env:PROJ_LIB="$env:SDK_PREFIX\bin\proj7\share
+            $env:PROJ_LIB="$env:SDK_PREFIX\bin\proj7\share"
             write-host $env:GDAL_DATA
             write-host $env:PROJ_LIB
             pip wheel --verbose --no-deps .

@@ -78,7 +78,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
           key: ${{ runner.os }}-${{ matrix.targetplatform }}-v4
       - name: download deps
-        if: steps.cache-deps.outputs.cache-hit != 'true'
+        # if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }

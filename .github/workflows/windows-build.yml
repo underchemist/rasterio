@@ -85,6 +85,8 @@ jobs:
       PROJ_VERSION: 7.2.1
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: 'add-win-workflow'
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:

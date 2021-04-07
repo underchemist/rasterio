@@ -119,7 +119,7 @@ jobs:
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"
             pip install wheel delvewheel
             $env:GDAL_DATA="$SDK_PREFIX/bin/gdal-data"
-            $env:PROJ_DATA="$SDK_PREFIX/bin/proj/share/proj7/share"
+            $env:PROJ_LIB="$SDK_PREFIX/bin/proj/share/proj7/share"
             pip wheel --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name

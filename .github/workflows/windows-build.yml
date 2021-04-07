@@ -109,7 +109,7 @@ jobs:
         with:
           path: |
             ${{ steps.get-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v3
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v4
       - name: wheel
         shell: pwsh
         run: |

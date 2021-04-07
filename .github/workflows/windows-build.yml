@@ -122,7 +122,7 @@ jobs:
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
             delvewheel repair -v --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel
-            pip install $wheel
+            pip install -U $wheel
       - name: upload artifacts
         uses: actions/upload-artifact@v2
         with:
@@ -130,8 +130,8 @@ jobs:
           path: wheelhouse/rasterio*.whl
       - name: test
         run: |
-            $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             pip install -Ur requirements-dev.txt
+            pip freeze
             mkdir tmp
             cd tmp
             Copy-Item  -Path "..\tests" -Destination "." -Recurse

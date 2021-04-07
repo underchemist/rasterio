@@ -27,10 +27,9 @@ def add_gdal_dll_directories():
                         if glob.glob(os.path.join(p, 'gdal*.dll')):
                             os.add_dll_directory(p)
         else:
-            if 'PATH' in os.environ:
-                for p in os.environ['PATH'].split(os.pathsep):
-                    if glob.glob(os.path.join(p, 'gdal*.dll')):
-                        os.add_dll_directory(p)
+            os.environ.setdefault('PATH', '')
+            os.environ['PATH'] += os.pathsep + dll_directory
+
     try:
         yield None
     finally:

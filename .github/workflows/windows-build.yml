@@ -45,7 +45,7 @@ jobs:
         with:
           path: |
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v3
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v4
       - name: download deps
         if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
@@ -120,7 +120,7 @@ jobs:
             pip install wheel delvewheel
             $env:PACKAGE_DATA="YES"
             $env:GDAL_DATA="$env:SDK_PREFIX\bin\gdal-data"
-            $env:PROJ_LIB="$env:SDK_PREFIX\bin\proj7\share"
+            $env:PROJ_LIB="$env:SDK_PREFIX\bin\proj6\share"
             write-host $env:PACKAGE_DATA
             write-host $env:GDAL_DATA
             write-host $env:PROJ_LIB

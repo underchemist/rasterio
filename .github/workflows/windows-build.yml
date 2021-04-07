@@ -123,6 +123,7 @@ jobs:
           $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
           $env:CMAKE_INSTALL_PREFIX="-DCMAKE_INSTALL_PREFIX=" + $env:PROJ_INSTALL_DIR
           $env:PROJ_NETWORK="ON"
+          $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
           mkdir build
           cd build
           cmake -G $env:VS_VERSION `

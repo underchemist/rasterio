@@ -122,7 +122,7 @@ jobs:
             $env:PROJ_LIB="$SDK_PREFIX/bin/proj/share/proj7/share"
             write-host $env:GDAL_DATA
             write-host $env:PROJ_LIB
-            pip wheel --no-deps .
+            pip wheel --verbose --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
             delvewheel repair -v --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel

@@ -59,18 +59,20 @@ jobs:
             if(-Not (Test-Path -Path $env:GDAL_ZIP )) { Invoke-WebRequest "$env:GDAL_URL" -OutFile "$env:GDAL_ZIP" }
             cd ..
             if(-Not (Test-Path -Path sdk)) { mkdir sdk }
-            if(-Not (Test-Path -Path proj-install)) { mkdir proj-install }
-            if(-Not (Test-Path -Path gdal-install)) { mkdir gdal-install }
+            if(-Not (Test-Path -Path proj-build)) { mkdir proj-build }
+            if(-Not (Test-Path -Path gdal-build)) { mkdir gdal-build }
             cd sdk
             7z x ..\downloads\$env:SDK_ZIP
-            cd ..
-            cd proj-install
+            cd ..\proj-build
             7z x ..\downloads\$env:PROJ_ZIP
-            cd ..
-            cd gdal-install
+            Copy-Item -Path "$($env:PROJ_ZIP -replace ".zip")/*" -Destination "." -Recurse
+            Remove-Item "$($env:PROJ_ZIP -replace ".zip")" -Recurse
+            cd ..\gdal-build
             7z x ..\downloads\$env:GDAL_ZIP
-            dir $env:GITHUB_WORKSPACE\proj-install
-            dir $env:GITHUB_WORKSPACE\gdal-install
+            Copy-Item -Path "gdal-$env:GDAL_VERSION/*" -Destination "." -Recurse
+            Remove-Item "gdal-$env:GDAL_VERSION" -Recurse
+            dir $env:GITHUB_WORKSPACE\proj-build
+            dir $env:GITHUB_WORKSPACE\gdal-build
   build:
     needs: deps
     name: Build Wheels

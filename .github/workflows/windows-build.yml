@@ -96,7 +96,10 @@ jobs:
         shell: pwsh
         run: |
             if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
+            $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
+            echo "SDK_PREFIX=$env:SDK_PREFIX" >> $env:GITHUB_ENV
+            
       - name: get cache dir
         id: get-cache-dir
         run: echo "::set-output name=dir::$env:GITHUB_WORKSPACE\sdk"
@@ -111,7 +114,6 @@ jobs:
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
-            $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:INCLUDE="$env:SDK_PREFIX\include"
             $env:LIB="$env:SDK_PREFIX\lib"
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib"

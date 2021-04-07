@@ -47,7 +47,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v2
       - name: download deps
         if: steps.cache-gisinternals.outputs.cache-hit != 'true'
         shell: pwsh
@@ -106,7 +106,7 @@ jobs:
         with:
           path: |
             ${{ steps.get-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v2
       - name: wheel
         shell: pwsh
         run: |

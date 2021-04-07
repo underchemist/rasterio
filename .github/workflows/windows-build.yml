@@ -10,6 +10,9 @@ jobs:
       matrix:
         targetplatform: [x64]
     env:
+      VS_VERSION: Visual Studio 16
+      VS_VER: 2019
+      MSVC_VER: 1920
       SDK: release-1911
       GDAL_VERSION: 3.2.2
       PROJ_VERSION: 7.2.1

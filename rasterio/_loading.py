@@ -17,7 +17,7 @@ log.addHandler(logging.NullHandler())
 def add_gdal_dll_directories():
     dll_dirs = []
     dll_directory = os.path.dirname(__file__) + '.libs'
-    if platform.system() == 'Windows' and os.path.isdir(dll_directory):
+    if platform.system() == 'Windows':
         if sys.version_info >= (3, 8):
             if os.path.exists(dll_directory):
                 dll_dirs.append(os.add_dll_directory(dll_directory))
@@ -26,7 +26,7 @@ def add_gdal_dll_directories():
                     for p in os.environ['PATH'].split(os.pathsep):
                         if glob.glob(os.path.join(p, 'gdal*.dll')):
                             os.add_dll_directory(p)
-        else:
+        elif os.path.exists(dll_directory):
             os.environ.setdefault('PATH', '')
             os.environ['PATH'] += os.pathsep + dll_directory
 

@@ -214,7 +214,7 @@ jobs:
           # $env:NMAKE_LOCAL+="XERCES_DIR=bla`n"
           # $env:NMAKE_LOCAL+="XERCES_INCLUDE=-I`$(SDK_INC) -I`$(SDK_INC)\xercesc`n"
           # $env:NMAKE_LOCAL+="XERCES_LIB=`$(SDK_LIB)\xerces-c_3.lib`n"
-          $env:NMAKE_LOCAL+="ILI_ENABLED = YES`n"
+          # $env:NMAKE_LOCAL+="ILI_ENABLED = YES`n"
           $env:NMAKE_LOCAL+="EXPAT_DIR=bla`n"
           $env:NMAKE_LOCAL+="EXPAT_INCLUDE=-I`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="EXPAT_LIB=`$(SDK_LIB)\expat.lib`n"

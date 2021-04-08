@@ -31,6 +31,8 @@ jobs:
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:PROJ_ZIP="proj-$env:PROJ_VERSION.zip"
             $env:PROJ_URL="$env:OSGEO_URL/proj/$env:PROJ_ZIP"
+            $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
+            $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
             $gdalversionstripped = $env:GDAL_VERSION -replace "\."
             $env:GDAL_ZIP="gdal$gdalversionstripped.zip"
             $env:GDAL_URL="$env:OSGEO_URL/gdal/$env:GDAL_VERSION/$env:GDAL_ZIP"
@@ -42,6 +44,8 @@ jobs:
             echo "PROJ_URL=$env:PROJ_URL" >> $env:GITHUB_ENV
             echo "GDAL_ZIP=$env:GDAL_ZIP" >> $env:GITHUB_ENV
             echo "GDAL_URL=$env:GDAL_URL" >> $env:GITHUB_ENV
+            echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
+            echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
             if("${{ matrix.targetplatform }}" -eq "x86")
             {
                 $env:ARCHITECTURE="x86"
@@ -69,15 +73,17 @@ jobs:
         id: get-cache-dirs
         run: |
           echo "::set-output name=gisinternals-dir::$env:GITHUB_WORKSPACE\sdk"
-          echo "::set-output name=proj-dir::$env:GITHUB_WORKSPACE\proj-install"
-          echo "::Set-output name=gdal-dir::$env:GITHUB_WORKSPACE\gdal-install"
+          echo "::set-output name=proj-dir::$env:PROJ_INSTALL_DIR"
+          echo "::Set-output name=gdal-dir::$env:GDAL_INSTALL_DIR"
       - name: cache deps
         uses: actions/cache@v2
         id: cache-deps
         with:
           path: |
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v4
+            ${{ steps.get-cache-dirs.outputs.proj-dir }}
+            ${{ steps.get-cache-dirs.outputs.gdal-dir }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v5
       - name: download deps
         # if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
@@ -119,12 +125,11 @@ jobs:
                 Import-VisualStudioVars -VisualStudioVersion $env:VS_VER -Architecture $env:ARCHITECTURE
             }
       - name: build proj
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           echo "ARCH_FLAGS = $env:ARCH_FLAGS"
           cd $env:GITHUB_WORKSPACE\proj-build
-          $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
-          echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
           $env:CMAKE_INSTALL_PREFIX="-DCMAKE_INSTALL_PREFIX=" + $env:PROJ_INSTALL_DIR
           $env:PROJ_NETWORK="ON"
           $env:PATH="$env:GITHUB_WORKSPACE;$env:PATH"
@@ -157,8 +162,6 @@ jobs:
         run: |
           write-host $env:PROJ_INSTALL_DIR
           cd $env:GITHUB_WORKSPACE\gdal-build
-          $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
-          echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
           mkdir $env:GDAL_INSTALL_DIR
           $env:SDK_INC="$env:SDK_PREFIX\include"
           $env:SDK_LIB="$env:SDK_PREFIX\lib"
@@ -201,11 +204,11 @@ jobs:
           $env:NMAKE_LOCAL+="HDF5_LIB = `$(SDK_LIB)\hdf5.lib`n"
           $env:NMAKE_LOCAL+="KEA_CFLAGS = -I`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="KEA_LIB = `$(SDK_LIB)\libkea.lib `$(SDK_LIB)\hdf5_cpp.lib`n"
-          $env:NMAKE_LOCAL+="NETCDF_SETTING=yes`n"
-          $env:NMAKE_LOCAL+="NETCDF_LIB=`$(SDK_LIB)\netcdf.lib`n"
-          $env:NMAKE_LOCAL+="NETCDF_INC_DIR=`$(SDK_INC)`n"
-          $env:NMAKE_LOCAL+="NETCDF_HAS_NC4 = yes`n"
-          #$env:NMAKE_LOCAL+="NETCDF_HAS_NETCDF_MEM = yes`n"
+          # $env:NMAKE_LOCAL+="NETCDF_SETTING=yes`n"
+          # $env:NMAKE_LOCAL+="NETCDF_LIB=`$(SDK_LIB)\netcdf.lib`n"
+          # $env:NMAKE_LOCAL+="NETCDF_INC_DIR=`$(SDK_INC)`n"
+          # $env:NMAKE_LOCAL+="NETCDF_HAS_NC4 = yes`n"
+          # $env:NMAKE_LOCAL+="NETCDF_HAS_NETCDF_MEM = yes`n"
           $env:NMAKE_LOCAL+="PROJ_INCLUDE=-I$env:PROJ_INSTALL_DIR\include`n"
           $env:NMAKE_LOCAL+="PROJ_LIBRARY=$env:PROJ_INSTALL_DIR\lib\proj.lib`n"
           # For some reason libzstd.dll and libdeflate.dll conflicts at runtime
@@ -259,7 +262,9 @@ jobs:
         with:
           path: |
             ${{ steps.get-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v4
+            ${{ steps.get-cache-dirs.outputs.proj-dir }}
+            ${{ steps.get-cache-dirs.outputs.gdal-dir }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v5
       - name: wheel
         shell: pwsh
         run: |

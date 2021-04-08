@@ -165,7 +165,8 @@ jobs:
           mkdir $env:GDAL_INSTALL_DIR
           $env:SDK_INC="$env:SDK_PREFIX\include"
           $env:SDK_LIB="$env:SDK_PREFIX\lib"
-          $env:NMAKE_LOCAL= "GEOS_CFLAGS=-I`$(SDK_INC) -DHAVE_GEOS`n"
+          $env:NMAKE_LOCAL="GDAL_HOME=$env:GDAL_INSTALL_DIR`n"
+          $env:NMAKE_LOCAL+="GEOS_CFLAGS=-I`$(SDK_INC) -DHAVE_GEOS`n"
           $env:NMAKE_LOCAL+="GEOS_LIB=`$(SDK_LIB)\geos_c.lib`n"
           $env:NMAKE_LOCAL+="PG_INC_DIR=`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="PG_LIB=`$(SDK_LIB)\libpqdll.lib wsock32.lib`n"

@@ -138,6 +138,7 @@ jobs:
             $env:CMAKE_INSTALL_PREFIX `
             -DBUILD_TESTING=OFF `
             -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake `
             -DBUILD_SHARED_LIBS=ON `
             -DENABLE_CURL=ON `
             -DCURL_INCLUDE_DIR=$env:SDK_PREFIX\include\curl `

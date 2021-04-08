@@ -260,8 +260,8 @@ jobs:
             echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
             echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
             
-      - name: get cache dir
-        id: get-cache-dir
+      - name: get cache dirs
+        id: get-cache-dirs
         run: |
           echo "::set-output name=dir::$env:GITHUB_WORKSPACE\sdk"
           echo "::set-output name=proj-dir::$env:PROJ_INSTALL_DIR"
@@ -271,7 +271,7 @@ jobs:
         id: cache-deps
         with:
           path: |
-            ${{ steps.get-cache-dir.outputs.dir }}
+            ${{ steps.get-cache-dirs.outputs.dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
           key: ${{ runner.os }}-${{ matrix.targetplatform }}-v7

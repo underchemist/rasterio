@@ -85,7 +85,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
           key: ${{ runner.os }}-${{ matrix.targetplatform }}-v8
       - name: download deps
-        # if: steps.cache-deps.outputs.cache-hit != 'true'
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
@@ -112,6 +112,7 @@ jobs:
             dir $env:GITHUB_WORKSPACE\proj-build
             dir $env:GITHUB_WORKSPACE\gdal-build
       - name: setup build env
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
             Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
@@ -289,12 +290,12 @@ jobs:
             write-host $env:PACKAGE_DATA
             write-host $env:GDAL_DATA
             write-host $env:PROJ_LIB
-            write-host $env:GDAL_INSTALL_DIR
-            write-host $env:PROJ_INSTALL_DIR
+            dir $env:GDAL_INSTALL_DIR\bin
+            dir $env:PROJ_INSTALL_DIR\bin
             pip wheel --no-deps .
-            $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
+            $env:PATH="$env:GDAL_INSTALL_DIR\bin;$env:PROJ_INSTALL_DIR\bin;$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
-            delvewheel repair -v --add-path $env:GDAL_INSTALL_DIR\bin --add-path $env:PROJ_INSTALL_DIR\bin --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel
+            delvewheel repair -v --add-path="$env:GDAL_INSTALL_DIR\bin" --add-path="$env:PROJ_INSTALL_DIR\bin" --add-path="$env:SDK_PREFIX\bin" --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel
             pip install -U wheelhouse/$wheel
       - name: upload artifacts
         uses: actions/upload-artifact@v2

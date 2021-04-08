@@ -262,7 +262,10 @@ jobs:
             
       - name: get cache dir
         id: get-cache-dir
-        run: echo "::set-output name=dir::$env:GITHUB_WORKSPACE\sdk"
+        run: |
+          echo "::set-output name=dir::$env:GITHUB_WORKSPACE\sdk"
+          echo "::set-output name=proj-dir::$env:PROJ_INSTALL_DIR"
+          echo "::Set-output name=gdal-dir::$env:GDAL_INSTALL_DIR"
       - name: cache deps
         uses: actions/cache@v2
         id: cache-deps

@@ -279,9 +279,9 @@ jobs:
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
-            $env:INCLUDE="$env:GDAL_INSTALL_DIR\include;$env:PROJ_INSTALL_DIR\include"
-            $env:LIB="$env:GDAL_INSTALL_DIR\lib;$env:PROJ_INSTALL_DIR\lib"
-            $env:LINK="$env:GDAL_INSTALL_DIR\lib\gdal_i.lib;$env:PROJ_INSTALL_DIR\lib\proj.lib"
+            $env:INCLUDE="$env:GDAL_INSTALL_DIR\include"
+            $env:LIB="$env:GDAL_INSTALL_DIR\lib"
+            $env:LINK="$env:GDAL_INSTALL_DIR\lib\gdal_i.lib"
             pip install wheel delvewheel
             $env:PACKAGE_DATA="YES"
             $env:GDAL_DATA="$env:GDAL_INSTALL_DIR\data"

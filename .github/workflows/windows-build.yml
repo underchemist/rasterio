@@ -158,6 +158,7 @@ jobs:
           cmake --build . --config Release --target install
           dir $env:PROJ_INSTALL_DIR
       - name: build gdal
+        if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           write-host $env:PROJ_INSTALL_DIR

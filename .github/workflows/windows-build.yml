@@ -18,6 +18,9 @@ jobs:
       VS_VER: 2019
       MSVC_VER: 1920
       SDK: release-1911
+      LIBZSTD_VERSION: 1.4.7
+      LIBWEBP_VERSION: 1.0.3
+      LIBDEFLATE_VERSION: 1.7
       GDAL_VERSION: 3.2.2
       PROJ_VERSION: 7.2.1
       OSGEO_URL: http://download.osgeo.org
@@ -26,9 +29,18 @@ jobs:
         shell: pwsh
         run: |
             if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:LIBZSTD_ARCH="win64"} else {$env:LIBZSTD_ARCH="win32"}
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:LIBWEBP_ARCH="x64"} else {$env:LIBWEBP_ARCH="x86"}
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:LIBDEFLATE_ARCH="x86_64"} else {$env:LIBDEFLATE_ARCH="i686"}
             $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
             $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
+            $env:LIBZSTD_ZIP="zstd-v$env:LIBZSTD_VERSION-$env:LIBZSTD_ARCH.zip"
+            $env:LIBZSTD_URL="https://github.com/facebook/zstd/releases/download/v$env:LIBZSTD_VERSION/$env:LIBZSTD_ZIP"
+            $env:LIBWEBP_ZIP="libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH.zip"
+            $env:LIBWEBP_URL="https://storage.googleapis.com/downloads.webmproject.org/releases/webp/$env:LIBWEBP_ZIP"
+            $env:LIBDEFLATE_ZIP="libdeflate-$env:LIBDEFLATE_VERSION-windows-$env:LIBDEFLATE_ARCH-bin.zip"
+            $env:LIBDEFLATE_URL="https://github.com/ebiggers/libdeflate/releases/download/v$env:LIBDEFLATE_VERSION/$env:LIBDEFLATE_ZIP"
             $env:PROJ_ZIP="proj-$env:PROJ_VERSION.zip"
             $env:PROJ_URL="$env:OSGEO_URL/proj/$env:PROJ_ZIP"
             $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
@@ -40,6 +52,12 @@ jobs:
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
             echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
             echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
+            echo "LIBZSTD_ZIP=$env:LIBZSTD_ZIP" >> $env:GITHUB_ENV
+            echo "LIBZSTD_URL=$env:LIBZSTD_URL" >> $env:GITHUB_ENV
+            echo "LIBWEBP_ZIP=$env:LIBWEBP_ZIP" >> $env:GITHUB_ENV
+            echo "LIBWEBP_URL=$env:LIBWEBP_URL" >> $env:GITHUB_ENV
+            echo "LIBDEFLATE_ZIP=$env:LIBDEFLATE_ZIP" >> $env:GITHUB_ENV
+            echo "LIBDEFLATE_URL=$env:LIBDEFLATE_URL" >> $env:GITHUB_ENV
             echo "PROJ_ZIP=$env:PROJ_ZIP" >> $env:GITHUB_ENV
             echo "PROJ_URL=$env:PROJ_URL" >> $env:GITHUB_ENV
             echo "GDAL_ZIP=$env:GDAL_ZIP" >> $env:GITHUB_ENV
@@ -83,7 +101,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v8
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v9
       - name: download deps
         if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
@@ -91,6 +109,9 @@ jobs:
             if(-Not (Test-Path -Path downloads)) { mkdir downloads }
             cd downloads
             if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
+            if(-Not (Test-Path -Path "libzstd.zip" -PathType Leaf)) { Invoke-WebRequest "$env:LIBZSTD_URL" -OutFile "libzstd.zip" }
+            if(-Not (Test-Path -Path "libwebp.zip" -PathType Leaf)) { Invoke-WebRequest "$env:LIBWEBP_URL" -OutFile "libwebp.zip" }
+            if(-Not (Test-Path -Path "libdeflate.zip" -PathType Leaf)) { Invoke-WebRequest "$env:LIBDEFLATE_URL" -OutFile "libdeflate.zip" }
             if(-Not (Test-Path -Path $env:PROJ_ZIP )) { Invoke-WebRequest "$env:PROJ_URL" -OutFile "$env:PROJ_ZIP" }
             if(-Not (Test-Path -Path $env:GDAL_ZIP )) { Invoke-WebRequest "$env:GDAL_URL" -OutFile "$env:GDAL_ZIP" }
             cd ..
@@ -101,6 +122,9 @@ jobs:
             7z x ..\downloads\$env:SDK_ZIP
             Remove-Item "$env:SDK_PREFIX\bin\proj*dll"
             Remove-Item "$env:SDK_PREFIX\bin\gdal*dll"
+            7z x ..\downloads\libzstd.zip
+            7z x ..\downloads\libwebp.zip
+            7z x ..\downloads\libdeflate.zip
             cd ..\proj-build
             7z x ..\downloads\$env:PROJ_ZIP
             Copy-Item -Path "$($env:PROJ_ZIP -replace ".zip")/*" -Destination "." -Recurse
@@ -170,8 +194,8 @@ jobs:
           $env:NMAKE_LOCAL="GDAL_HOME=$env:GDAL_INSTALL_DIR`n"
           $env:NMAKE_LOCAL+="GEOS_CFLAGS=-I`$(SDK_INC) -DHAVE_GEOS`n"
           $env:NMAKE_LOCAL+="GEOS_LIB=`$(SDK_LIB)\geos_c.lib`n"
-          $env:NMAKE_LOCAL+="PG_INC_DIR=`$(SDK_INC)`n"
-          $env:NMAKE_LOCAL+="PG_LIB=`$(SDK_LIB)\libpqdll.lib wsock32.lib`n"
+          # $env:NMAKE_LOCAL+="PG_INC_DIR=`$(SDK_INC)`n"
+          # $env:NMAKE_LOCAL+="PG_LIB=`$(SDK_LIB)\libpqdll.lib wsock32.lib`n"
           $env:NMAKE_LOCAL+="CURL_DIR=bla`n"
           $env:NMAKE_LOCAL+="CURL_INC=-I`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="CURL_LIB=`$(SDK_LIB)\libcurl_imp.lib wsock32.lib wldap32.lib winmm.lib`n"
@@ -182,16 +206,16 @@ jobs:
           $env:NMAKE_LOCAL+="MINIZIP_LIBRARY = `$(SDK_LIB)\minizip.lib`n"
           $env:NMAKE_LOCAL+="MYSQL_INC_DIR=`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="MYSQL_LIB=`$(SDK_LIB)\libmysql.lib advapi32.lib`n"
-          $env:NMAKE_LOCAL+="XERCES_DIR=bla`n"
-          $env:NMAKE_LOCAL+="XERCES_INCLUDE=-I`$(SDK_INC) -I`$(SDK_INC)\xercesc`n"
-          $env:NMAKE_LOCAL+="XERCES_LIB=`$(SDK_LIB)\xerces-c_3.lib`n"
+          # $env:NMAKE_LOCAL+="XERCES_DIR=bla`n"
+          # $env:NMAKE_LOCAL+="XERCES_INCLUDE=-I`$(SDK_INC) -I`$(SDK_INC)\xercesc`n"
+          # $env:NMAKE_LOCAL+="XERCES_LIB=`$(SDK_LIB)\xerces-c_3.lib`n"
           $env:NMAKE_LOCAL+="ILI_ENABLED = YES`n"
           $env:NMAKE_LOCAL+="EXPAT_DIR=bla`n"
           $env:NMAKE_LOCAL+="EXPAT_INCLUDE=-I`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="EXPAT_LIB=`$(SDK_LIB)\expat.lib`n"
-          $env:NMAKE_LOCAL+="LIBKML_DIR=bla`n"
-          $env:NMAKE_LOCAL+="LIBKML_INCLUDE=-I`$(SDK_INC)`n"
-          $env:NMAKE_LOCAL+="LIBKML_LIBS=`$(SDK_LIB)\libkmlbase.lib `$(SDK_LIB)\libkmlconvenience.lib `$(SDK_LIB)\libkmldom.lib `$(SDK_LIB)\libkmlengine.lib `$(SDK_LIB)\libkmlregionator.lib `$(SDK_LIB)\libkmlxsd.lib `$(SDK_LIB)\expat.lib `$(SDK_LIB)\zdll.lib`n"
+          # $env:NMAKE_LOCAL+="LIBKML_DIR=bla`n"
+          # $env:NMAKE_LOCAL+="LIBKML_INCLUDE=-I`$(SDK_INC)`n"
+          # $env:NMAKE_LOCAL+="LIBKML_LIBS=`$(SDK_LIB)\libkmlbase.lib `$(SDK_LIB)\libkmlconvenience.lib `$(SDK_LIB)\libkmldom.lib `$(SDK_LIB)\libkmlengine.lib `$(SDK_LIB)\libkmlregionator.lib `$(SDK_LIB)\libkmlxsd.lib `$(SDK_LIB)\expat.lib `$(SDK_LIB)\zdll.lib`n"
           $env:NMAKE_LOCAL+="POPPLER_ENABLED = YES`n"
           $env:NMAKE_LOCAL+="POPPLER_CFLAGS = -I`$(SDK_INC) -I`$(SDK_INC)\poppler`n"
           $env:NMAKE_LOCAL+="POPPLER_MAJOR_VERSION = 0`n"
@@ -200,9 +224,9 @@ jobs:
           $env:NMAKE_LOCAL+="OPENJPEG_ENABLED = YES`n"
           $env:NMAKE_LOCAL+="OPENJPEG_CFLAGS = -I`$(SDK_INC)\openjpeg-2.1`n"
           $env:NMAKE_LOCAL+="OPENJPEG_LIB = `$(SDK_LIB)\openjp2.lib`n"
-          $env:NMAKE_LOCAL+="ECWDIR=bla`n"
-          $env:NMAKE_LOCAL+="ECWLIB=`$(SDK_LIB)\libecwj2.lib`n"
-          $env:NMAKE_LOCAL+="ECWFLAGS=-DECWSDK_VERSION=33 -I`$(SDK_INC) /D_MBCS /D_UNICODE /DUNICODE /D_WINDOWS  /DLIBECWJ2 /DWIN32 /D_WINDLL -DNO_X86_MMI`n"
+          # $env:NMAKE_LOCAL+="ECWDIR=bla`n"
+          # $env:NMAKE_LOCAL+="ECWLIB=`$(SDK_LIB)\libecwj2.lib`n"
+          # $env:NMAKE_LOCAL+="ECWFLAGS=-DECWSDK_VERSION=33 -I`$(SDK_INC) /D_MBCS /D_UNICODE /DUNICODE /D_WINDOWS  /DLIBECWJ2 /DWIN32 /D_WINDLL -DNO_X86_MMI`n"
           $env:NMAKE_LOCAL+="HDF5_DIR = `$(SDK_PREFIX)`n"
           $env:NMAKE_LOCAL+="HDF5_LIB = `$(SDK_LIB)\hdf5.lib`n"
           $env:NMAKE_LOCAL+="KEA_CFLAGS = -I`$(SDK_INC)`n"
@@ -215,13 +239,13 @@ jobs:
           $env:NMAKE_LOCAL+="PROJ_INCLUDE=-I$env:PROJ_INSTALL_DIR\include`n"
           $env:NMAKE_LOCAL+="PROJ_LIBRARY=$env:PROJ_INSTALL_DIR\lib\proj.lib`n"
           # For some reason libzstd.dll and libdeflate.dll conflicts at runtime
-          # $env:NMAKE_LOCAL+="ZSTD_CFLAGS = -I`$(SDK_PREFIX)\include`n"
-          # $env:NMAKE_LOCAL+="ZSTD_LIBS = `$(SDK_PREFIX)\dll\libzstd.dll.a`n"
-          # $env:NMAKE_LOCAL+="WEBP_ENABLED=YES`n"
-          # $env:NMAKE_LOCAL+="WEBP_CFLAGS = -I`$(SDK_PREFIX)\libwebp-1.0.3-windows-x86\include`n"
-          # $env:NMAKE_LOCAL+="WEBP_LIBS = /NODEFAULTLIB:libcmt.lib `$(SDK_PREFIX)\libwebp-1.0.3-windows-x86\lib\libwebp.lib`n"
-          # $env:NMAKE_LOCAL+="LIBDEFLATE_CFLAGS = -I`$(SDK_PREFIX)`n"
-          # $env:NMAKE_LOCAL+="LIBDEFLATE_LIB = `$(SDK_PREFIX)\libdeflate.lib`n"
+          $env:NMAKE_LOCAL+="ZSTD_CFLAGS = -I`$(SDK_PREFIX)\include`n"
+          $env:NMAKE_LOCAL+="ZSTD_LIBS = `$(SDK_PREFIX)\dll\libzstd.dll.a`n"
+          $env:NMAKE_LOCAL+="WEBP_ENABLED=YES`n"
+          $env:NMAKE_LOCAL+="WEBP_CFLAGS = -I`$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\include`n"
+          $env:NMAKE_LOCAL+="WEBP_LIBS = /NODEFAULTLIB:libcmt.lib `$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\lib\libwebp.lib`n"
+          $env:NMAKE_LOCAL+="LIBDEFLATE_CFLAGS = -I`$(SDK_PREFIX)`n"
+          $env:NMAKE_LOCAL+="LIBDEFLATE_LIB = `$(SDK_PREFIX)\libdeflate.lib`n"
           $env:NMAKE_LOCAL | Set-Content "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           Get-Content -Path "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           $env:PATH="$env:PROJ_INSTALL_DIR\bin;$env:PATH"
@@ -275,7 +299,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v8
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v9
       - name: wheel
         shell: pwsh
         run: |

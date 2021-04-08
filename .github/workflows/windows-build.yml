@@ -124,6 +124,7 @@ jobs:
           echo "ARCH_FLAGS = $env:ARCH_FLAGS"
           cd $env:GITHUB_WORKSPACE\proj-build
           $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
+          echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
           $env:CMAKE_INSTALL_PREFIX="-DCMAKE_INSTALL_PREFIX=" + $env:PROJ_INSTALL_DIR
           $env:PROJ_NETWORK="ON"
           $env:PATH="$env:GITHUB_WORKSPACE;$env:PATH"
@@ -156,6 +157,7 @@ jobs:
         run: |
           cd $env:GITHUB_WORKSPACE\gdal-build
           $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
+          echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
           mkdir $env:GDAL_INSTALL_DIR
           $env:SDK_INC="$env:SDK_PREFIX\include"
           $env:SDK_LIB="$env:SDK_PREFIX\lib"

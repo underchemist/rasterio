@@ -162,7 +162,7 @@ jobs:
         run: |
           write-host $env:PROJ_INSTALL_DIR
           cd $env:GITHUB_WORKSPACE\gdal-build
-          mkdir $env:GDAL_INSTALL_DIR
+          if(-Not (Test-Path -Path $env:GDAL_INSTALL_DIR )) { mkdir $env:GDAL_INSTALL_DIR }
           $env:SDK_INC="$env:SDK_PREFIX\include"
           $env:SDK_LIB="$env:SDK_PREFIX\lib"
           $env:NMAKE_LOCAL="GDAL_HOME=$env:GDAL_INSTALL_DIR`n"

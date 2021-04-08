@@ -254,7 +254,7 @@ jobs:
           $env:NMAKE_LOCAL | Set-Content "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           Get-Content -Path "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           $env:PATH="$env:PROJ_INSTALL_DIR\bin;$env:PATH"
-          nmake /f makefile.vc MSVC_VER=$env:MSVC_VER $env:WIN64_ARG USER_DEFS="/WX $env:ARCH_FLAGS" devinstall
+          nmake /f makefile.vc MSVC_VER=$env:MSVC_VER $env:WIN64_ARG devinstall
           dir $env:GDAL_INSTALL_DIR
           
   build:

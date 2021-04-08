@@ -52,6 +52,9 @@ jobs:
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
             echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
             echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
+            echo "LIBZSTD_ARCH=$env:LIBZSTD_ARCH" >> $env:GITHUB_ENV
+            echo "LIBWEBP_ARCH=$env:LIBWEBP_ARCH" >> $env:GITHUB_ENV
+            echo "LIBDEFLATE_ARCH=$env:LIBDEFLATE_ARCH" >> $env:GITHUB_ENV
             echo "LIBZSTD_ZIP=$env:LIBZSTD_ZIP" >> $env:GITHUB_ENV
             echo "LIBZSTD_URL=$env:LIBZSTD_URL" >> $env:GITHUB_ENV
             echo "LIBWEBP_ZIP=$env:LIBWEBP_ZIP" >> $env:GITHUB_ENV

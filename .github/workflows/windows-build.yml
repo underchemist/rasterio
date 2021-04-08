@@ -83,7 +83,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v5
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v6
       - name: download deps
         # if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
@@ -222,7 +222,8 @@ jobs:
           $env:NMAKE_LOCAL | Set-Content "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           Get-Content -Path "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           $env:PATH="$env:PROJ_INSTALL_DIR\bin;$env:PATH"
-          nmake /f makefile.vc MSVC_VER=$env:MSVC_VER $env:WIN64_ARG USER_DEFS="/WX $env:ARCH_FLAGS"
+          nmake /f makefile.vc MSVC_VER=$env:MSVC_VER $env:WIN64_ARG USER_DEFS="/WX $env:ARCH_FLAGS" install
+          dir $env:GDAL_INSTALL_DIR
           
   build:
     needs: deps
@@ -250,8 +251,12 @@ jobs:
         run: |
             if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
+            $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
+            $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
             echo "SDK_PREFIX=$env:SDK_PREFIX" >> $env:GITHUB_ENV
+            echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
+            echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
             
       - name: get cache dir
         id: get-cache-dir
@@ -264,25 +269,27 @@ jobs:
             ${{ steps.get-cache-dir.outputs.dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v5
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v6
       - name: wheel
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
-            $env:INCLUDE="$env:SDK_PREFIX\include"
-            $env:LIB="$env:SDK_PREFIX\lib;$env:PROJ_INSTALL_DIR\lib"
-            $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib;$env:PROJ_INSTALL_DIR\lib\proj.lib"
+            $env:INCLUDE="$env:GDAL_INSTALL_DIR\include;$env:PROJ_INSTALL_DIR\include"
+            $env:LIB="$env:GDAL_INSTALL_DIR\lib;$env:PROJ_INSTALL_DIR\lib"
+            $env:LINK="$env:GDAL_INSTALL_DIR\lib\gdal_i.lib;$env:PROJ_INSTALL_DIR\lib\proj.lib"
             pip install wheel delvewheel
             $env:PACKAGE_DATA="YES"
-            $env:GDAL_DATA="$env:GDAL_INSTALL_DIR\bin\gdal-data"
+            $env:GDAL_DATA="$env:GDAL_INSTALL_DIR\data"
             $env:PROJ_LIB="$env:PROJ_INSTALL_DIR\share\proj"
             write-host $env:PACKAGE_DATA
             write-host $env:GDAL_DATA
             write-host $env:PROJ_LIB
+            write-host $env:GDAL_INSTALL_DIR
+            write-host $env:PROJ_INSTALL_DIR
             pip wheel --no-deps .
             $env:PATH="$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
-            delvewheel repair -v --add-path $env:PROJ_INSTALL_DIR\bin --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel
+            delvewheel repair -v --add-path $env:GDAL_INSTALL_DIR\bin --add-path $env:PROJ_INSTALL_DIR\bin --add-path $env:SDK_PREFIX\bin --no-dll="vcruntime140_1.dll;concrt140.dll;msvcp140.dll" $wheel
             pip install -U wheelhouse/$wheel
       - name: upload artifacts
         uses: actions/upload-artifact@v2

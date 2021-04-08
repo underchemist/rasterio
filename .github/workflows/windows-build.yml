@@ -292,6 +292,7 @@ jobs:
             write-host $env:PROJ_LIB
             dir $env:GDAL_INSTALL_DIR\bin
             dir $env:PROJ_INSTALL_DIR\bin
+            Copy-Item -Path "$env:PROJ_INSTALL_DIR\bin\proj*dll" -Destination "$env:PROJ_INSTALL_DIR\bin\proj.dll"
             pip wheel --no-deps .
             $env:PATH="$env:GDAL_INSTALL_DIR\bin;$env:PROJ_INSTALL_DIR\bin;$env:SDK_PREFIX\bin;$env:PATH"
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name

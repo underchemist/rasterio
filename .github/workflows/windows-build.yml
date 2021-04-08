@@ -216,7 +216,8 @@ jobs:
           # $env:NMAKE_LOCAL+="WEBP_LIBS = /NODEFAULTLIB:libcmt.lib `$(SDK_PREFIX)\libwebp-1.0.3-windows-x86\lib\libwebp.lib`n"
           # $env:NMAKE_LOCAL+="LIBDEFLATE_CFLAGS = -I`$(SDK_PREFIX)`n"
           # $env:NMAKE_LOCAL+="LIBDEFLATE_LIB = `$(SDK_PREFIX)\libdeflate.lib`n"
-          $env:NMAKE_LOCAL | Set-Content "$env:GDAL_INSTALL_DIR\nmake.local"
+          $env:NMAKE_LOCAL | Set-Content "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
+          Get-Content -Path "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           $env:PATH="$env:PROJ_INSTALL_DIR\bin;$env:PATH"
           nmake /f makefile.vc MSVC_VER=$env:MSVC_VER $env:WIN64_ARG USER_DEFS="/WX $env:ARCH_FLAGS"
           

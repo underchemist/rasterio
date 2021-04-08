@@ -141,11 +141,11 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake `
             -DBUILD_SHARED_LIBS=ON `
             -DENABLE_CURL=ON `
-            -DCURL_INCLUDE_DIR=$env:SDK_PREFIX\include\curl `
-            -DCURL_LIBRARY=$env:SDK_PREFIX\lib\libcurl_imp.lib `
+            -DCURL_INCLUDE_DIR="$env:SDK_PREFIX\include\curl" `
+            -DCURL_LIBRARY="$env:SDK_PREFIX\lib\libcurl_imp.lib" `
             -DENABLE_TIFF=ON `
-            -DTIFF_INCLUDE_DIR=$env:SDK_PREFIX\include `
-            -DTIFF_LIBRARY_RELEASE=$env:SDK_PREFIX\lib\tiff.lib `
+            -DTIFF_INCLUDE_DIR="$env:SDK_PREFIX\include" `
+            -DTIFF_LIBRARY_RELEASE="$env:SDK_PREFIX\lib\tiff.lib" `
             -DBUILD_PROJSYNC=ON
           cmake --build . --config Release --target install
           dir $env:PROJ_INSTALL_DIR

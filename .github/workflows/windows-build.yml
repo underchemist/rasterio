@@ -155,6 +155,7 @@ jobs:
       - name: build gdal
         shell: pwsh
         run: |
+          write-host $env:PROJ_INSTALL_DIR
           cd $env:GITHUB_WORKSPACE\gdal-build
           $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
           echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
@@ -267,7 +268,7 @@ jobs:
             $env:LINK="$env:SDK_PREFIX\lib\gdal_i.lib;$env:PROJ_INSTALL_DIR\lib\proj.lib"
             pip install wheel delvewheel
             $env:PACKAGE_DATA="YES"
-            $env:GDAL_DATA="$env:SDK_PREFIX\bin\gdal-data"
+            $env:GDAL_DATA="$env:GDAL_INSTALL_DIR\bin\gdal-data"
             $env:PROJ_LIB="$env:PROJ_INSTALL_DIR\share\proj"
             write-host $env:PACKAGE_DATA
             write-host $env:GDAL_DATA

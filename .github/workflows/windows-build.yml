@@ -122,20 +122,22 @@ jobs:
             if(-Not (Test-Path -Path proj-build)) { mkdir proj-build }
             if(-Not (Test-Path -Path gdal-build)) { mkdir gdal-build }
             cd sdk
-            7z x ..\downloads\$env:SDK_ZIP
+            7z x $env:GITHUB_WORKSPACE\downloads\$env:SDK_ZIP
             Remove-Item "$env:SDK_PREFIX\bin\proj*dll"
             Remove-Item "$env:SDK_PREFIX\bin\gdal*dll"
-            7z x ..\downloads\libzstd.zip
-            7z x ..\downloads\libwebp.zip
-            7z x ..\downloads\libdeflate.zip
-            cd ..\proj-build
-            7z x ..\downloads\$env:PROJ_ZIP
+            cd $env:SDK_PREFIX
+            7z x $env:GITHUB_WORKSPACE\downloads\libzstd.zip
+            7z x $env:GITHUB_WORKSPACE\downloads\libwebp.zip
+            7z x $env:GITHUB_WORKSPACE\downloads\libdeflate.zip
+            cd $env:GITHUB_WORKSPACE\proj-build
+            7z x $env:GITHUB_WORKSPACE\downloads\$env:PROJ_ZIP
             Copy-Item -Path "$($env:PROJ_ZIP -replace ".zip")/*" -Destination "." -Recurse
             Remove-Item "$($env:PROJ_ZIP -replace ".zip")" -Recurse
-            cd ..\gdal-build
-            7z x ..\downloads\$env:GDAL_ZIP
+            cd $env:GITHUB_WORKSPACE\gdal-build
+            7z x $env:GITHUB_WORKSPACE\downloads\$env:GDAL_ZIP
             Copy-Item -Path "gdal-$env:GDAL_VERSION/*" -Destination "." -Recurse
             Remove-Item "gdal-$env:GDAL_VERSION" -Recurse
+            dir $env:SDK_PREFIX
             dir $env:GITHUB_WORKSPACE\proj-build
             dir $env:GITHUB_WORKSPACE\gdal-build
       - name: setup build env

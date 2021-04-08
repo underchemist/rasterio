@@ -72,7 +72,7 @@ jobs:
                 $env:ARCHITECTURE="x86"
                 $env:WIN64_ARG=""
                 $env:CMAKE_ARCHITECTURE="Win32"
-                $env:USER_DEFS="USER_DEFS="/WX""
+                $env:USER_DEFS="USER_DEFS=/WX"
             }
             else
             {

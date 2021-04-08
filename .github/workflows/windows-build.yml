@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x64]
+        targetplatform: [x86]
     env:
       TARGETPLATFORM: ${{ matrix.targetplatform }}
       VS_VERSION: Visual Studio 16
@@ -263,7 +263,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x64]
+        targetplatform: [x86]
         python-version: [3.7]
     env:
       SDK: release-1911

@@ -354,9 +354,7 @@ jobs:
       - name: zip
         run: |
           cd collection
-          dir rasterio-wheel-py3.6-x64
           Move-Item -Path "*\*.whl" -Destination "."
-          dir
           7z a rasterio-wheels-all.zip "*.whl"
       - name: upload bundle
         uses: actions/upload-artifact@v2

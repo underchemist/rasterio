@@ -1,13 +1,27 @@
-name: Windows Builds
+name: Build Windows Wheels
 
 on:
-  push:
-    branches:
-      - add-win-workflow
-
+  workflow_dispatch:
+    inputs:
+      gdal-version:
+        description: 'GDAL version'
+        required: true
+        default: "3.2.2"
+      proj-version:
+        description: 'PROJ version'
+        required: true
+        default: "7.2.1"
+      libwebp-version:
+        description: 'libwebp version'
+        required: true
+        default: "1.0.3"
+      libdeflate-version:
+        description: 'libdeflate version'
+        required: true
+        default: "1.7"
 jobs:
   deps:
-    name: Download SDK
+    name: download and build deps
     runs-on: windows-latest
     strategy:
       matrix:
@@ -19,10 +33,10 @@ jobs:
       MSVC_VER: 1920
       SDK: release-1911
       LIBZSTD_VERSION: 1.4.7
-      LIBWEBP_VERSION: 1.0.3
-      LIBDEFLATE_VERSION: 1.7
-      GDAL_VERSION: 3.2.2
-      PROJ_VERSION: 7.2.1
+      LIBWEBP_VERSION: ${{ github.events.inputs.libwebp-version }}
+      LIBDEFLATE_VERSION: ${{ github.events.inputs.libdeflate-version }}
+      GDAL_VERSION: ${{ github.events.intputs.gdal-version }}
+      PROJ_VERSION: ${{ github.events.inputs.proj-version}}
       OSGEO_URL: http://download.osgeo.org
     steps:
       - name: setup environment
@@ -79,7 +93,7 @@ jobs:
                 $env:ARCHITECTURE="amd64"
                 $env:WIN64_ARG="WIN64=YES"
                 $env:CMAKE_ARCHITECTURE="x64"
-                $env:USER_DEFS=""
+                $env:USER_DEFS="USER_DEFS=/WX /wd4244"
             }
             echo "ARCHITECTURE=$env:ARCHITECTURE" >> $env:GITHUB_ENV
             echo "WIN64_ARG=$env:WIN64_ARG" >> $env:GITHUB_ENV
@@ -107,8 +121,8 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v11
-      - name: download deps
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v12
+      - name: download and extract deps
         if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
@@ -126,6 +140,7 @@ jobs:
             if(-Not (Test-Path -Path gdal-build)) { mkdir gdal-build }
             cd sdk
             7z x $env:GITHUB_WORKSPACE\downloads\$env:SDK_ZIP
+            # do not want conflicting dlls after we build proj and gdal
             Remove-Item "$env:SDK_PREFIX\bin\proj*dll"
             Remove-Item "$env:SDK_PREFIX\bin\gdal*dll"
             cd $env:SDK_PREFIX
@@ -188,12 +203,10 @@ jobs:
             -DTIFF_LIBRARY_RELEASE="$env:SDK_PREFIX\lib\tiff.lib" `
             -DBUILD_PROJSYNC=ON
           cmake --build . --config Release --target install
-          dir $env:PROJ_INSTALL_DIR
       - name: build gdal
         if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          write-host $env:PROJ_INSTALL_DIR
           cd $env:GITHUB_WORKSPACE\gdal-build
           if(-Not (Test-Path -Path $env:GDAL_INSTALL_DIR )) { mkdir $env:GDAL_INSTALL_DIR }
           $env:SDK_INC="$env:SDK_PREFIX\include"
@@ -201,8 +214,6 @@ jobs:
           $env:NMAKE_LOCAL="GDAL_HOME=$env:GDAL_INSTALL_DIR`n"
           $env:NMAKE_LOCAL+="GEOS_CFLAGS=-I`$(SDK_INC) -DHAVE_GEOS`n"
           $env:NMAKE_LOCAL+="GEOS_LIB=`$(SDK_LIB)\geos_c.lib`n"
-          # $env:NMAKE_LOCAL+="PG_INC_DIR=`$(SDK_INC)`n"
-          # $env:NMAKE_LOCAL+="PG_LIB=`$(SDK_LIB)\libpqdll.lib wsock32.lib`n"
           $env:NMAKE_LOCAL+="CURL_DIR=bla`n"
           $env:NMAKE_LOCAL+="CURL_INC=-I`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="CURL_LIB=`$(SDK_LIB)\libcurl_imp.lib wsock32.lib wldap32.lib winmm.lib`n"
@@ -213,16 +224,9 @@ jobs:
           $env:NMAKE_LOCAL+="MINIZIP_LIBRARY = `$(SDK_LIB)\minizip.lib`n"
           $env:NMAKE_LOCAL+="MYSQL_INC_DIR=`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="MYSQL_LIB=`$(SDK_LIB)\libmysql.lib advapi32.lib`n"
-          # $env:NMAKE_LOCAL+="XERCES_DIR=bla`n"
-          # $env:NMAKE_LOCAL+="XERCES_INCLUDE=-I`$(SDK_INC) -I`$(SDK_INC)\xercesc`n"
-          # $env:NMAKE_LOCAL+="XERCES_LIB=`$(SDK_LIB)\xerces-c_3.lib`n"
-          # $env:NMAKE_LOCAL+="ILI_ENABLED = YES`n"
           $env:NMAKE_LOCAL+="EXPAT_DIR=bla`n"
           $env:NMAKE_LOCAL+="EXPAT_INCLUDE=-I`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="EXPAT_LIB=`$(SDK_LIB)\expat.lib`n"
-          # $env:NMAKE_LOCAL+="LIBKML_DIR=bla`n"
-          # $env:NMAKE_LOCAL+="LIBKML_INCLUDE=-I`$(SDK_INC)`n"
-          # $env:NMAKE_LOCAL+="LIBKML_LIBS=`$(SDK_LIB)\libkmlbase.lib `$(SDK_LIB)\libkmlconvenience.lib `$(SDK_LIB)\libkmldom.lib `$(SDK_LIB)\libkmlengine.lib `$(SDK_LIB)\libkmlregionator.lib `$(SDK_LIB)\libkmlxsd.lib `$(SDK_LIB)\expat.lib `$(SDK_LIB)\zdll.lib`n"
           $env:NMAKE_LOCAL+="POPPLER_ENABLED = YES`n"
           $env:NMAKE_LOCAL+="POPPLER_CFLAGS = -I`$(SDK_INC) -I`$(SDK_INC)\poppler`n"
           $env:NMAKE_LOCAL+="POPPLER_MAJOR_VERSION = 0`n"
@@ -231,18 +235,15 @@ jobs:
           $env:NMAKE_LOCAL+="OPENJPEG_ENABLED = YES`n"
           $env:NMAKE_LOCAL+="OPENJPEG_CFLAGS = -I`$(SDK_INC)\openjpeg-2.1`n"
           $env:NMAKE_LOCAL+="OPENJPEG_LIB = `$(SDK_LIB)\openjp2.lib`n"
-          # $env:NMAKE_LOCAL+="ECWDIR=bla`n"
-          # $env:NMAKE_LOCAL+="ECWLIB=`$(SDK_LIB)\libecwj2.lib`n"
-          # $env:NMAKE_LOCAL+="ECWFLAGS=-DECWSDK_VERSION=33 -I`$(SDK_INC) /D_MBCS /D_UNICODE /DUNICODE /D_WINDOWS  /DLIBECWJ2 /DWIN32 /D_WINDLL -DNO_X86_MMI`n"
           $env:NMAKE_LOCAL+="HDF5_DIR = `$(SDK_PREFIX)`n"
           $env:NMAKE_LOCAL+="HDF5_LIB = `$(SDK_LIB)\hdf5.lib`n"
           $env:NMAKE_LOCAL+="KEA_CFLAGS = -I`$(SDK_INC)`n"
           $env:NMAKE_LOCAL+="KEA_LIB = `$(SDK_LIB)\libkea.lib `$(SDK_LIB)\hdf5_cpp.lib`n"
-          # $env:NMAKE_LOCAL+="NETCDF_SETTING=yes`n"
-          # $env:NMAKE_LOCAL+="NETCDF_LIB=`$(SDK_LIB)\netcdf.lib`n"
-          # $env:NMAKE_LOCAL+="NETCDF_INC_DIR=`$(SDK_INC)`n"
-          # $env:NMAKE_LOCAL+="NETCDF_HAS_NC4 = yes`n"
-          # $env:NMAKE_LOCAL+="NETCDF_HAS_NETCDF_MEM = yes`n"
+          $env:NMAKE_LOCAL+="NETCDF_SETTING=yes`n"
+          $env:NMAKE_LOCAL+="NETCDF_LIB=`$(SDK_LIB)\netcdf.lib`n"
+          $env:NMAKE_LOCAL+="NETCDF_INC_DIR=`$(SDK_INC)`n"
+          $env:NMAKE_LOCAL+="NETCDF_HAS_NC4 = yes`n"
+          $env:NMAKE_LOCAL+="NETCDF_HAS_NETCDF_MEM = yes`n"
           $env:NMAKE_LOCAL+="PROJ_INCLUDE=-I$env:PROJ_INSTALL_DIR\include`n"
           $env:NMAKE_LOCAL+="PROJ_LIBRARY=$env:PROJ_INSTALL_DIR\lib\proj.lib`n"
           # For some reason libzstd.dll and libdeflate.dll conflicts at runtime
@@ -257,8 +258,6 @@ jobs:
           Get-Content -Path "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
           $env:PATH="$env:PROJ_INSTALL_DIR\bin;$env:PATH"
           nmake /f makefile.vc MSVC_VER=$env:MSVC_VER $env:WIN64_ARG $env:USER_DEFS devinstall
-          dir $env:GDAL_INSTALL_DIR
-          
   build:
     needs: deps
     name: Build Wheels
@@ -269,8 +268,7 @@ jobs:
         python-version: [3.7]
     env:
       SDK: release-1911
-      GDAL_VERSION: 3.2.2
-      PROJ_VERSION: 7.2.1
+      GDAL_VERSION: ${{ github.events.intputs.gdal-version }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -306,7 +304,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v11
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-v12
       - name: wheel
         shell: pwsh
         run: |
@@ -318,11 +316,7 @@ jobs:
             $env:PACKAGE_DATA="YES"
             $env:GDAL_DATA="$env:GDAL_INSTALL_DIR\data"
             $env:PROJ_LIB="$env:PROJ_INSTALL_DIR\share\proj"
-            write-host $env:PACKAGE_DATA
-            write-host $env:GDAL_DATA
-            write-host $env:PROJ_LIB
-            dir $env:GDAL_INSTALL_DIR\bin
-            dir $env:PROJ_INSTALL_DIR\bin
+            # rasterio looks for proj.dll not e.g. proj_7_2.dll
             Copy-Item -Path "$env:PROJ_INSTALL_DIR\bin\proj*dll" -Destination "$env:PROJ_INSTALL_DIR\bin\proj.dll"
             $env:PATH="$env:GDAL_INSTALL_DIR\bin;$env:PROJ_INSTALL_DIR\bin;$env:SDK_PREFIX\bin;$env:SDK_PREFIX\dll;$env:SDK_PREFIX;$env:PATH"
             pip wheel --no-deps .
@@ -337,6 +331,7 @@ jobs:
       - name: test
         continue-on-error: true
         run: |
+            # at the moment tests fail on win
             pip install -Ur requirements-dev.txt
             pip freeze
             mkdir tmp
@@ -345,3 +340,4 @@ jobs:
             dir tests
             $env:PROJ_NETWORK="ON"
             python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon"
+       

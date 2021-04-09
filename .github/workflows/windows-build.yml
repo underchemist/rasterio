@@ -93,7 +93,7 @@ jobs:
                 $env:ARCHITECTURE="amd64"
                 $env:WIN64_ARG="WIN64=YES"
                 $env:CMAKE_ARCHITECTURE="x64"
-                $env:USER_DEFS="USER_DEFS=/WX /wd4244"
+                $env:USER_DEFS="USER_DEFS=/WX /wd4244 /wd4789"
             }
             echo "ARCHITECTURE=$env:ARCHITECTURE" >> $env:GITHUB_ENV
             echo "WIN64_ARG=$env:WIN64_ARG" >> $env:GITHUB_ENV
@@ -155,9 +155,6 @@ jobs:
             7z x $env:GITHUB_WORKSPACE\downloads\$env:GDAL_ZIP
             Copy-Item -Path "gdal-$env:GDAL_VERSION/*" -Destination "." -Recurse
             Remove-Item "gdal-$env:GDAL_VERSION" -Recurse
-            dir $env:SDK_PREFIX
-            dir $env:GITHUB_WORKSPACE\proj-build
-            dir $env:GITHUB_WORKSPACE\gdal-build
       - name: setup build env
         if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
@@ -337,7 +334,6 @@ jobs:
             mkdir tmp
             cd tmp
             Copy-Item  -Path "..\tests" -Destination "." -Recurse
-            dir tests
             $env:PROJ_NETWORK="ON"
             python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon"
        

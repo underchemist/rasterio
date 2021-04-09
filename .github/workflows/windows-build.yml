@@ -354,7 +354,7 @@ jobs:
       - name: zip
         run: |
           cd collection
-          dir rasterio-whell-py3.6-x64
+          dir rasterio-wheel-py3.6-x64
           Move-Item -Path "*\*.whl" -Destination "\."
           dir
           7z a rasterio-wheels-all.zip "*.whl"

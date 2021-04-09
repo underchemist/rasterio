@@ -362,4 +362,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rasterio-wheels-all.zip
-          path: rasterio-wheels-all.zip
+          path: collection\rasterio-wheels-all.zip

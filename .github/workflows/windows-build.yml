@@ -149,7 +149,7 @@ jobs:
             Remove-Item "$env:SDK_PREFIX\bin\proj*dll"
             Remove-Item "$env:SDK_PREFIX\bin\gdal*dll"
             cd $env:SDK_PREFIX
-            7z x $env:GITHUB_WORKSPACE\downloads\libzstd.zip -y
+            # 7z x $env:GITHUB_WORKSPACE\downloads\libzstd.zip -y
             7z x $env:GITHUB_WORKSPACE\downloads\libwebp.zip -y
             7z x $env:GITHUB_WORKSPACE\downloads\libdeflate.zip -y
             cd $env:GITHUB_WORKSPACE\proj-build
@@ -250,8 +250,8 @@ jobs:
           $env:NMAKE_LOCAL+="PROJ_INCLUDE=-I$env:PROJ_INSTALL_DIR\include`n"
           $env:NMAKE_LOCAL+="PROJ_LIBRARY=$env:PROJ_INSTALL_DIR\lib\proj.lib`n"
           # TODO: For some reason libzstd.dll and libdeflate.dll conflicts at runtime
-          $env:NMAKE_LOCAL+="ZSTD_CFLAGS = -I`$(SDK_PREFIX)\include`n"
-          $env:NMAKE_LOCAL+="ZSTD_LIBS = `$(SDK_PREFIX)\dll\libzstd.dll`n"
+          # $env:NMAKE_LOCAL+="ZSTD_CFLAGS = -I`$(SDK_PREFIX)\include`n"
+          # $env:NMAKE_LOCAL+="ZSTD_LIBS = `$(SDK_PREFIX)\dll\libzstd.dll.a`n"
           $env:NMAKE_LOCAL+="WEBP_ENABLED=YES`n"
           $env:NMAKE_LOCAL+="WEBP_CFLAGS = -I`$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\include`n"
           $env:NMAKE_LOCAL+="WEBP_LIBS = /NODEFAULTLIB:libcmt.lib `$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\lib\libwebp.lib`n"

@@ -274,7 +274,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: 'add-win-workflow'
+          ref: ${{ github.event.inputs.rasterio-ref }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:

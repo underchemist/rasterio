@@ -355,7 +355,7 @@ jobs:
         run: |
           cd collection
           dir rasterio-wheel-py3.6-x64
-          Move-Item -Path "*\*.whl" -Destination "\."
+          Move-Item -Path "*\*.whl" -Destination "."
           dir
           7z a rasterio-wheels-all.zip "*.whl"
       - name: upload bundle

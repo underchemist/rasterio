@@ -25,7 +25,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x86, x64]
+        targetplatform: [x64]
     env:
       TARGETPLATFORM: ${{ matrix.targetplatform }}
       VS_VERSION: Visual Studio 16
@@ -93,6 +93,7 @@ jobs:
                 $env:ARCHITECTURE="amd64"
                 $env:WIN64_ARG="WIN64=YES"
                 $env:CMAKE_ARCHITECTURE="x64"
+                # TODO: figure out why netcdf and webp raise these warnings on x64 
                 $env:USER_DEFS="USER_DEFS=/WX /wd4244 /wd4789"
             }
             echo "ARCHITECTURE=$env:ARCHITECTURE" >> $env:GITHUB_ENV
@@ -243,9 +244,9 @@ jobs:
           $env:NMAKE_LOCAL+="NETCDF_HAS_NETCDF_MEM = yes`n"
           $env:NMAKE_LOCAL+="PROJ_INCLUDE=-I$env:PROJ_INSTALL_DIR\include`n"
           $env:NMAKE_LOCAL+="PROJ_LIBRARY=$env:PROJ_INSTALL_DIR\lib\proj.lib`n"
-          # For some reason libzstd.dll and libdeflate.dll conflicts at runtime
-          # $env:NMAKE_LOCAL+="ZSTD_CFLAGS = -I`$(SDK_PREFIX)\include`n"
-          # $env:NMAKE_LOCAL+="ZSTD_LIBS = `$(SDK_PREFIX)\dll\libzstd.dll.a`n"
+          # TODO: For some reason libzstd.dll and libdeflate.dll conflicts at runtime
+          $env:NMAKE_LOCAL+="ZSTD_CFLAGS = -I`$(SDK_PREFIX)\include`n"
+          $env:NMAKE_LOCAL+="ZSTD_LIBS = `$(SDK_PREFIX)\dll\libzstd.dll`n"
           $env:NMAKE_LOCAL+="WEBP_ENABLED=YES`n"
           $env:NMAKE_LOCAL+="WEBP_CFLAGS = -I`$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\include`n"
           $env:NMAKE_LOCAL+="WEBP_LIBS = /NODEFAULTLIB:libcmt.lib `$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\lib\libwebp.lib`n"
@@ -261,7 +262,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x86, x64]
+        targetplatform: [x64]
         python-version: [3.7]
     env:
       SDK: release-1911
@@ -336,4 +337,22 @@ jobs:
             Copy-Item  -Path "..\tests" -Destination "." -Recurse
             $env:PROJ_NETWORK="ON"
             python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon"
-       
+  bundle:
+    needs: build
+    name: zip wheels into single artifact
+    runs-on: windows-latest
+    steps:
+      - name: collect
+        uses: actions/download-artifact@v2
+        with: 
+          path: collection
+      - name: zip
+        run: |
+          cd collection
+          Move-Item -Path "*\*.whl" -Destination "\."
+          7z a rasterio-wheels-all.zip "*.whl"
+      - name: upload bundle
+        uses: actions/upload-artifact@v2
+        with:
+          name: rasterio-wheels-all.zip
+          path: rasterio-wheels-all.zip

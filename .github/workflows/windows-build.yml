@@ -33,10 +33,10 @@ jobs:
       MSVC_VER: 1920
       SDK: release-1911
       LIBZSTD_VERSION: 1.4.7
-      LIBWEBP_VERSION: "${{ github.events.inputs.libwebp-version }}"
-      LIBDEFLATE_VERSION: "${{ github.events.inputs.libdeflate-version }}"
-      GDAL_VERSION: "${{ github.events.intputs.gdal-version }}"
-      PROJ_VERSION: "${{ github.events.inputs.proj-version}}"
+      LIBWEBP_VERSION: ${{ github.event.inputs.libwebp-version }}
+      LIBDEFLATE_VERSION: ${{ github.event.inputs.libdeflate-version }}
+      GDAL_VERSION: ${{ github.event.intputs.gdal-version }}
+      PROJ_VERSION: ${{ github.event.inputs.proj-version}}
       OSGEO_URL: http://download.osgeo.org
     steps:
       - name: setup environment

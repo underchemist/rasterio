@@ -29,7 +29,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x64]
+        targetplatform: [x86, x64]
     env:
       TARGETPLATFORM: ${{ matrix.targetplatform }}
       VS_VERSION: Visual Studio 16
@@ -267,8 +267,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        targetplatform: [x64]
-        python-version: [3.7]
+        targetplatform: [x86, x64]
+        python-version: [3.6, 3.7, 3.8, 3.9]
     env:
       SDK: release-1911
       GDAL_VERSION: ${{ github.event.inputs.gdal-version }}

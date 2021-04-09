@@ -35,7 +35,7 @@ jobs:
       LIBZSTD_VERSION: 1.4.7
       LIBWEBP_VERSION: ${{ github.event.inputs.libwebp-version }}
       LIBDEFLATE_VERSION: ${{ github.event.inputs.libdeflate-version }}
-      GDAL_VERSION: ${{ github.event.intputs.gdal-version }}
+      GDAL_VERSION: ${{ github.event.inputs.gdal-version }}
       PROJ_VERSION: ${{ github.event.inputs.proj-version}}
       OSGEO_URL: http://download.osgeo.org
     steps:

@@ -3,6 +3,10 @@ name: Build Windows Wheels
 on:
   workflow_dispatch:
     inputs:
+      rasterio-ref:
+        description: 'rasterio ref to build'
+        required: true
+        default: "master"
       gdal-version:
         description: 'GDAL version'
         required: true
@@ -19,10 +23,6 @@ on:
         description: 'libdeflate version'
         required: true
         default: "1.7"
-      rasterio-ref:
-        description: 'rasterio ref to build'
-        required: true
-        default: "master"
 jobs:
   deps:
     name: download and build deps

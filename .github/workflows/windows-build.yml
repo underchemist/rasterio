@@ -324,7 +324,7 @@ jobs:
             $env:PATH="$env:GDAL_INSTALL_DIR\bin;$env:PROJ_INSTALL_DIR\bin;$env:SDK_PREFIX\bin;$env:SDK_PREFIX\dll;$env:SDK_PREFIX;$env:PATH"
             pip wheel --no-deps .
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
-            delvewheel repair -v --add-path="$env:GDAL_INSTALL_DIR\bin" --add-path="$env:PROJ_INSTALL_DIR\bin" --add-path="$env:SDK_PREFIX" --add-path="$env:SDK_PREFIX\bin" --add-path="$end:SDK_PREFIX\dll" $wheel
+            delvewheel repair -v --add-path="$env:GDAL_INSTALL_DIR\bin" --add-path="$env:PROJ_INSTALL_DIR\bin" --add-path="$env:SDK_PREFIX" --add-path="$env:SDK_PREFIX\bin" --add-path="$end:SDK_PREFIX\dll" --add-dll="vcruntime140.dll;vcruntime140_1.dll;msvcp140.dll" $wheel
             pip install -U wheelhouse/$wheel
       - name: upload artifacts
         uses: actions/upload-artifact@v2

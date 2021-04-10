@@ -126,7 +126,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}-rasterio-${{ github.event.inputs.rasterio-ref }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}
       - name: download and extract deps
         if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
@@ -307,7 +307,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}-rasterio-${{ github.event.inputs.rasterio-ref }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}
       - name: wheel
         shell: pwsh
         run: |
@@ -322,6 +322,9 @@ jobs:
             # rasterio looks for proj.dll not e.g. proj_7_2.dll
             Copy-Item -Path "$env:PROJ_INSTALL_DIR\bin\proj*dll" -Destination "$env:PROJ_INSTALL_DIR\bin\proj.dll"
             $env:PATH="$env:GDAL_INSTALL_DIR\bin;$env:PROJ_INSTALL_DIR\bin;$env:SDK_PREFIX\bin;$env:SDK_PREFIX\dll;$env:SDK_PREFIX;$env:PATH"
+            # does this help with conda?
+            $env:DISTUTILS_USE_SDK=1
+            $env:MSSdk=1
             pip wheel --no-deps .
             $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
             delvewheel repair -v --add-path="$env:GDAL_INSTALL_DIR\bin" --add-path="$env:PROJ_INSTALL_DIR\bin" --add-path="$env:SDK_PREFIX" --add-path="$env:SDK_PREFIX\bin" --add-path="$end:SDK_PREFIX\dll" --add-dll="vcruntime140.dll;vcruntime140_1.dll;msvcp140.dll" $wheel

@@ -126,7 +126,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}-rasterio-${{ github.event.inputs.rasterio-ref }}
       - name: download and extract deps
         if: steps.cache-deps.outputs.cache-hit != 'true'
         shell: pwsh
@@ -307,7 +307,7 @@ jobs:
             ${{ steps.get-cache-dirs.outputs.dir }}
             ${{ steps.get-cache-dirs.outputs.proj-dir }}
             ${{ steps.get-cache-dirs.outputs.gdal-dir }}
-          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}-rasterio-${{ github.event.inputs.rasterio-ref }}
       - name: wheel
         shell: pwsh
         run: |

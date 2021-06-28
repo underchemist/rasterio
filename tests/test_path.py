@@ -98,7 +98,7 @@ def test_parse_gdal():
 def test_parse_windows_path(monkeypatch):
     """Return Windows paths unparsed"""
     monkeypatch.setattr(sys, 'platform', 'win32')
-    assert parse_path(r'C:\\foo.tif').path == r'C:\\foo.tif'
+    assert parse_path(r'C:\\foo.tif').path == r'C:/foo.tif'
 
 
 def test_vsi_path_scheme():

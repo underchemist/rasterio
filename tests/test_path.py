@@ -1,5 +1,6 @@
 """Tests of rasterio.path"""
 
+import os
 import sys
 
 import pytest
@@ -98,6 +99,7 @@ def test_parse_gdal():
 def test_parse_windows_path(monkeypatch):
     """Return Windows paths unparsed"""
     monkeypatch.setattr(sys, 'platform', 'win32')
+    monkeypatch.setattr(os, 'name', 'nt')
     assert parse_path(r'C:\\foo.tif').path == r'C:/foo.tif'
 
 

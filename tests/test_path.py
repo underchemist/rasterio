@@ -96,11 +96,11 @@ def test_parse_gdal():
     assert parse_path('GDAL:filepath:varname').path == 'GDAL:filepath:varname'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Checking behavior on posix, not win32")
 def test_parse_windows_path(monkeypatch):
     """Return Windows paths unparsed"""
     monkeypatch.setattr(sys, 'platform', 'win32')
-    monkeypatch.setattr(os, 'name', 'nt')
-    assert parse_path(r'C:\\foo.tif').path == r'C:/foo.tif'
+    assert parse_path(r'C:\\foo.tif').path == r'C:\\foo.tif'
 
 
 def test_vsi_path_scheme():

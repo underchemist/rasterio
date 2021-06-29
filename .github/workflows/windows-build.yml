@@ -272,6 +272,7 @@ jobs:
     env:
       SDK: release-1911
       GDAL_VERSION: ${{ github.event.inputs.gdal-version }}
+      VS_VER: 2019
     steps:
       - uses: actions/checkout@v2
         with:
@@ -329,7 +330,6 @@ jobs:
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
-            cl.exe
             $env:INCLUDE="$env:GDAL_INSTALL_DIR\include"
             $env:LIB="$env:GDAL_INSTALL_DIR\lib"
             $env:LINK="$env:GDAL_INSTALL_DIR\lib\gdal_i.lib"

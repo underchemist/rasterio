@@ -295,7 +295,7 @@ jobs:
             }
             else
             {
-                $env:ARCHITECTURE="amd64"
+                $env:ARCHITECTURE="x64"
             }
             echo "ARCHITECTURE=$env:ARCHITECTURE" >> $env:GITHUB_ENV
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV

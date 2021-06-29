@@ -288,11 +288,27 @@ jobs:
             $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
             $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
             $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
+            if("${{ matrix.targetplatform }}" -eq "x86")
+            {
+                $env:ARCHITECTURE="x86"
+            }
+            else
+            {
+                $env:ARCHITECTURE="amd64"
+            }
+            echo "ARCHITECTURE=$env:ARCHITECTURE" >> $env:GITHUB_ENV
             echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
             echo "SDK_PREFIX=$env:SDK_PREFIX" >> $env:GITHUB_ENV
             echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
             echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
-            
+      - name: set compiler environment
+        shell: cmd
+        run: |
+            if "%VS_VER%" == "2019" CALL "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=%ARCHITECTURE%
+            echo PATH=%PATH%>> %GITHUB_ENV%
+            echo INCLUDE=%INCLUDE%>> %GITHUB_ENV%
+            echo LIB=%LIB%>> %GITHUB_ENV%
+            echo LIBPATH=%LIBPATH%>> %GITHUB_ENV%
       - name: get cache dirs
         id: get-cache-dirs
         run: |

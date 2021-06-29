@@ -1,0 +1,366 @@
+name: Build Windows Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      rasterio-ref:
+        description: 'rasterio ref to build'
+        required: true
+        default: "master"
+      gdal-version:
+        description: 'GDAL version'
+        required: true
+        default: "3.2.2"
+      proj-version:
+        description: 'PROJ version'
+        required: true
+        default: "7.2.1"
+      libwebp-version:
+        description: 'libwebp version'
+        required: true
+        default: "1.0.3"
+      libdeflate-version:
+        description: 'libdeflate version'
+        required: true
+        default: "1.7"
+jobs:
+  deps:
+    name: download and build deps
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        targetplatform: [x86, x64]
+    env:
+      TARGETPLATFORM: ${{ matrix.targetplatform }}
+      VS_VERSION: Visual Studio 16
+      VS_VER: 2019
+      MSVC_VER: 1920
+      SDK: release-1911
+      LIBZSTD_VERSION: 1.4.7
+      LIBWEBP_VERSION: ${{ github.event.inputs.libwebp-version }}
+      LIBDEFLATE_VERSION: ${{ github.event.inputs.libdeflate-version }}
+      GDAL_VERSION: ${{ github.event.inputs.gdal-version }}
+      PROJ_VERSION: ${{ github.event.inputs.proj-version}}
+      OSGEO_URL: http://download.osgeo.org
+    steps:
+      - name: setup environment
+        shell: pwsh
+        run: |
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:LIBZSTD_ARCH="win64"} else {$env:LIBZSTD_ARCH="win32"}
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:LIBWEBP_ARCH="x64"} else {$env:LIBWEBP_ARCH="x86"}
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:LIBDEFLATE_ARCH="x86_64"} else {$env:LIBDEFLATE_ARCH="i686"}
+            $env:SDK_ZIP="$env:SDK$env:SDK_ARCH-dev.zip"
+            $env:SDK_URL="http://download.gisinternals.com/sdk/downloads/$env:SDK_ZIP"
+            $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
+            $env:LIBZSTD_ZIP="zstd-v$env:LIBZSTD_VERSION-$env:LIBZSTD_ARCH.zip"
+            $env:LIBZSTD_URL="https://github.com/facebook/zstd/releases/download/v$env:LIBZSTD_VERSION/$env:LIBZSTD_ZIP"
+            $env:LIBWEBP_ZIP="libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH.zip"
+            $env:LIBWEBP_URL="https://storage.googleapis.com/downloads.webmproject.org/releases/webp/$env:LIBWEBP_ZIP"
+            $env:LIBDEFLATE_ZIP="libdeflate-$env:LIBDEFLATE_VERSION-windows-$env:LIBDEFLATE_ARCH-bin.zip"
+            $env:LIBDEFLATE_URL="https://github.com/ebiggers/libdeflate/releases/download/v$env:LIBDEFLATE_VERSION/$env:LIBDEFLATE_ZIP"
+            $env:PROJ_ZIP="proj-$env:PROJ_VERSION.zip"
+            $env:PROJ_URL="$env:OSGEO_URL/proj/$env:PROJ_ZIP"
+            $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
+            $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
+            $gdalversionstripped = $env:GDAL_VERSION -replace "\."
+            $env:GDAL_ZIP="gdal$gdalversionstripped.zip"
+            $env:GDAL_URL="$env:OSGEO_URL/gdal/$env:GDAL_VERSION/$env:GDAL_ZIP"
+            echo "SDK_PREFIX=$env:SDK_PREFIX" >> $env:GITHUB_ENV
+            echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
+            echo "SDK_ZIP=$env:SDK_ZIP" >> $env:GITHUB_ENV
+            echo "SDK_URL=$env:SDK_URL" >> $env:GITHUB_ENV
+            echo "LIBZSTD_ARCH=$env:LIBZSTD_ARCH" >> $env:GITHUB_ENV
+            echo "LIBWEBP_ARCH=$env:LIBWEBP_ARCH" >> $env:GITHUB_ENV
+            echo "LIBDEFLATE_ARCH=$env:LIBDEFLATE_ARCH" >> $env:GITHUB_ENV
+            echo "LIBZSTD_ZIP=$env:LIBZSTD_ZIP" >> $env:GITHUB_ENV
+            echo "LIBZSTD_URL=$env:LIBZSTD_URL" >> $env:GITHUB_ENV
+            echo "LIBWEBP_ZIP=$env:LIBWEBP_ZIP" >> $env:GITHUB_ENV
+            echo "LIBWEBP_URL=$env:LIBWEBP_URL" >> $env:GITHUB_ENV
+            echo "LIBDEFLATE_ZIP=$env:LIBDEFLATE_ZIP" >> $env:GITHUB_ENV
+            echo "LIBDEFLATE_URL=$env:LIBDEFLATE_URL" >> $env:GITHUB_ENV
+            echo "PROJ_ZIP=$env:PROJ_ZIP" >> $env:GITHUB_ENV
+            echo "PROJ_URL=$env:PROJ_URL" >> $env:GITHUB_ENV
+            echo "GDAL_ZIP=$env:GDAL_ZIP" >> $env:GITHUB_ENV
+            echo "GDAL_URL=$env:GDAL_URL" >> $env:GITHUB_ENV
+            echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
+            echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
+            if("${{ matrix.targetplatform }}" -eq "x86")
+            {
+                $env:ARCHITECTURE="x86"
+                $env:WIN64_ARG=""
+                $env:CMAKE_ARCHITECTURE="Win32"
+                $env:USER_DEFS="USER_DEFS=/WX"
+            }
+            else
+            {
+                $env:ARCHITECTURE="amd64"
+                $env:WIN64_ARG="WIN64=YES"
+                $env:CMAKE_ARCHITECTURE="x64"
+                # TODO: figure out why netcdf and webp raise these warnings on x64 
+                $env:USER_DEFS="USER_DEFS=/WX /wd4244 /wd4789"
+            }
+            echo "ARCHITECTURE=$env:ARCHITECTURE" >> $env:GITHUB_ENV
+            echo "WIN64_ARG=$env:WIN64_ARG" >> $env:GITHUB_ENV
+            echo "CMAKE_ARCHITECTURE=$env:CMAKE_ARCHITECTURE" >> $env:GITHUB_ENV
+            echo "USER_DEFS=$env:USER_DEFS" >> $env:GITHUB_ENV
+      - name: set compiler environment
+        shell: cmd
+        run: |
+            if "%VS_VER%" == "2019" CALL "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=%ARCHITECTURE%
+            echo PATH=%PATH%>> %GITHUB_ENV%
+            echo INCLUDE=%INCLUDE%>> %GITHUB_ENV%
+            echo LIB=%LIB%>> %GITHUB_ENV%
+            echo LIBPATH=%LIBPATH%>> %GITHUB_ENV%
+      - name: get cache dirs
+        id: get-cache-dirs
+        run: |
+          echo "::set-output name=gisinternals-dir::$env:GITHUB_WORKSPACE\sdk"
+          echo "::set-output name=proj-dir::$env:PROJ_INSTALL_DIR"
+          echo "::Set-output name=gdal-dir::$env:GDAL_INSTALL_DIR"
+      - name: cache deps
+        uses: actions/cache@v2
+        id: cache-deps
+        with:
+          path: |
+            ${{ steps.get-cache-dirs.outputs.gisinternals-dir }}
+            ${{ steps.get-cache-dirs.outputs.proj-dir }}
+            ${{ steps.get-cache-dirs.outputs.gdal-dir }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}-rasterio-${{ github.event.inputs.rasterio-ref }}
+      - name: download and extract deps
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+            if(-Not (Test-Path -Path downloads)) { mkdir downloads }
+            cd downloads
+            if(-Not (Test-Path -Path $env:SDK_ZIP )) { Invoke-WebRequest "$env:SDK_URL" -OutFile "$env:SDK_ZIP" }
+            if(-Not (Test-Path -Path "libzstd.zip" -PathType Leaf)) { Invoke-WebRequest "$env:LIBZSTD_URL" -OutFile "libzstd.zip" }
+            if(-Not (Test-Path -Path "libwebp.zip" -PathType Leaf)) { Invoke-WebRequest "$env:LIBWEBP_URL" -OutFile "libwebp.zip" }
+            if(-Not (Test-Path -Path "libdeflate.zip" -PathType Leaf)) { Invoke-WebRequest "$env:LIBDEFLATE_URL" -OutFile "libdeflate.zip" }
+            if(-Not (Test-Path -Path $env:PROJ_ZIP )) { Invoke-WebRequest "$env:PROJ_URL" -OutFile "$env:PROJ_ZIP" }
+            if(-Not (Test-Path -Path $env:GDAL_ZIP )) { Invoke-WebRequest "$env:GDAL_URL" -OutFile "$env:GDAL_ZIP" }
+            cd ..
+            if(-Not (Test-Path -Path sdk)) { mkdir sdk }
+            if(-Not (Test-Path -Path proj-build)) { mkdir proj-build }
+            if(-Not (Test-Path -Path gdal-build)) { mkdir gdal-build }
+            cd sdk
+            7z x $env:GITHUB_WORKSPACE\downloads\$env:SDK_ZIP
+            # do not want conflicting dlls after we build proj and gdal
+            Remove-Item "$env:SDK_PREFIX\bin\proj*dll"
+            Remove-Item "$env:SDK_PREFIX\bin\gdal*dll"
+            cd $env:SDK_PREFIX
+            # 7z x $env:GITHUB_WORKSPACE\downloads\libzstd.zip -y
+            7z x $env:GITHUB_WORKSPACE\downloads\libwebp.zip -y
+            7z x $env:GITHUB_WORKSPACE\downloads\libdeflate.zip -y
+            cd $env:GITHUB_WORKSPACE\proj-build
+            7z x $env:GITHUB_WORKSPACE\downloads\$env:PROJ_ZIP
+            Copy-Item -Path "$($env:PROJ_ZIP -replace ".zip")/*" -Destination "." -Recurse
+            Remove-Item "$($env:PROJ_ZIP -replace ".zip")" -Recurse
+            cd $env:GITHUB_WORKSPACE\gdal-build
+            7z x $env:GITHUB_WORKSPACE\downloads\$env:GDAL_ZIP
+            Copy-Item -Path "gdal-$env:GDAL_VERSION/*" -Destination "." -Recurse
+            Remove-Item "gdal-$env:GDAL_VERSION" -Recurse
+      - name: setup build env
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+            Install-Module Pscx -AllowClobber
+            Install-Module VSSetup -Scope CurrentUser
+            if($env:VS_VER -eq "2019")
+            {
+            }
+            else
+            {
+                Import-VisualStudioVars -VisualStudioVersion $env:VS_VER -Architecture $env:ARCHITECTURE
+            }
+      - name: build proj
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          cd $env:GITHUB_WORKSPACE\proj-build
+          $env:CMAKE_INSTALL_PREFIX="-DCMAKE_INSTALL_PREFIX=" + $env:PROJ_INSTALL_DIR
+          $env:PROJ_NETWORK="ON"
+          $env:PATH="$env:GITHUB_WORKSPACE;$env:PATH"
+          mkdir build
+          mkdir $env:PROJ_INSTALL_DIR
+          cd build
+          # need newer sqlite executable to build proj.db?
+          $env:VCPKG_PLATFORM="$env:TARGETPLATFORM"+"-windows"
+          vcpkg install sqlite3:$env:VCPKG_PLATFORM
+          Invoke-WebRequest "https://sqlite.org/2018/sqlite-tools-win32-x86-3250100.zip" -OutFile "sqlite-tools-win32-x86-3250100.zip"
+          7z x sqlite-tools-win32-x86-3250100.zip
+          copy sqlite-tools-win32-x86-3250100/sqlite3.exe $env:GITHUB_WORKSPACE
+          cmake -G $env:VS_VERSION `
+            -A $env:CMAKE_ARCHITECTURE .. `
+            $env:CMAKE_INSTALL_PREFIX `
+            -DBUILD_TESTING=OFF `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+            -DBUILD_SHARED_LIBS=ON `
+            -DENABLE_CURL=ON `
+            -DCURL_INCLUDE_DIR="$env:SDK_PREFIX\include\curl" `
+            -DCURL_LIBRARY="$env:SDK_PREFIX\lib\libcurl_imp.lib" `
+            -DENABLE_TIFF=ON `
+            -DTIFF_INCLUDE_DIR="$env:SDK_PREFIX\include" `
+            -DTIFF_LIBRARY_RELEASE="$env:SDK_PREFIX\lib\tiff.lib" `
+            -DBUILD_PROJSYNC=ON
+          cmake --build . --config Release --target install
+      - name: build gdal
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          cd $env:GITHUB_WORKSPACE\gdal-build
+          if(-Not (Test-Path -Path $env:GDAL_INSTALL_DIR )) { mkdir $env:GDAL_INSTALL_DIR }
+          $env:SDK_INC="$env:SDK_PREFIX\include"
+          $env:SDK_LIB="$env:SDK_PREFIX\lib"
+          $env:NMAKE_LOCAL="GDAL_HOME=$env:GDAL_INSTALL_DIR`n"
+          $env:NMAKE_LOCAL+="GEOS_CFLAGS=-I`$(SDK_INC) -DHAVE_GEOS`n"
+          $env:NMAKE_LOCAL+="GEOS_LIB=`$(SDK_LIB)\geos_c.lib`n"
+          $env:NMAKE_LOCAL+="CURL_DIR=bla`n"
+          $env:NMAKE_LOCAL+="CURL_INC=-I`$(SDK_INC)`n"
+          $env:NMAKE_LOCAL+="CURL_LIB=`$(SDK_LIB)\libcurl_imp.lib wsock32.lib wldap32.lib winmm.lib`n"
+          $env:NMAKE_LOCAL+="SQLITE_INC=-I`$(SDK_INC) -DHAVE_SPATIALITE -DSPATIALITE_AMALGAMATION`n"
+          $env:NMAKE_LOCAL+="SQLITE_LIB=`$(SDK_LIB)\spatialite_i.lib `$(SDK_LIB)\sqlite3_i.lib`n"
+          $env:NMAKE_LOCAL+="KMLSUPEROVERLAY_SUPPORTED = YES`n"
+          $env:NMAKE_LOCAL+="MINIZIP_INCLUDE = -I`$(SDK_INC)`n"
+          $env:NMAKE_LOCAL+="MINIZIP_LIBRARY = `$(SDK_LIB)\minizip.lib`n"
+          $env:NMAKE_LOCAL+="MYSQL_INC_DIR=`$(SDK_INC)`n"
+          $env:NMAKE_LOCAL+="MYSQL_LIB=`$(SDK_LIB)\libmysql.lib advapi32.lib`n"
+          $env:NMAKE_LOCAL+="EXPAT_DIR=bla`n"
+          $env:NMAKE_LOCAL+="EXPAT_INCLUDE=-I`$(SDK_INC)`n"
+          $env:NMAKE_LOCAL+="EXPAT_LIB=`$(SDK_LIB)\expat.lib`n"
+          $env:NMAKE_LOCAL+="POPPLER_ENABLED = YES`n"
+          $env:NMAKE_LOCAL+="POPPLER_CFLAGS = -I`$(SDK_INC) -I`$(SDK_INC)\poppler`n"
+          $env:NMAKE_LOCAL+="POPPLER_MAJOR_VERSION = 0`n"
+          $env:NMAKE_LOCAL+="POPPLER_MINOR_VERSION = 30`n"
+          $env:NMAKE_LOCAL+="POPPLER_LIBS = `$(SDK_LIB)\poppler.lib `$(SDK_LIB)\freetype.lib `$(SDK_LIB)\harfbuzz.lib advapi32.lib gdi32.lib`n"
+          $env:NMAKE_LOCAL+="OPENJPEG_ENABLED = YES`n"
+          $env:NMAKE_LOCAL+="OPENJPEG_CFLAGS = -I`$(SDK_INC)\openjpeg-2.1`n"
+          $env:NMAKE_LOCAL+="OPENJPEG_LIB = `$(SDK_LIB)\openjp2.lib`n"
+          $env:NMAKE_LOCAL+="HDF5_DIR = `$(SDK_PREFIX)`n"
+          $env:NMAKE_LOCAL+="HDF5_LIB = `$(SDK_LIB)\hdf5.lib`n"
+          $env:NMAKE_LOCAL+="KEA_CFLAGS = -I`$(SDK_INC)`n"
+          $env:NMAKE_LOCAL+="KEA_LIB = `$(SDK_LIB)\libkea.lib `$(SDK_LIB)\hdf5_cpp.lib`n"
+          $env:NMAKE_LOCAL+="NETCDF_SETTING=yes`n"
+          $env:NMAKE_LOCAL+="NETCDF_LIB=`$(SDK_LIB)\netcdf.lib`n"
+          $env:NMAKE_LOCAL+="NETCDF_INC_DIR=`$(SDK_INC)`n"
+          $env:NMAKE_LOCAL+="NETCDF_HAS_NC4 = yes`n"
+          $env:NMAKE_LOCAL+="NETCDF_HAS_NETCDF_MEM = yes`n"
+          $env:NMAKE_LOCAL+="PROJ_INCLUDE=-I$env:PROJ_INSTALL_DIR\include`n"
+          $env:NMAKE_LOCAL+="PROJ_LIBRARY=$env:PROJ_INSTALL_DIR\lib\proj.lib`n"
+          # TODO: For some reason libzstd.dll and libdeflate.dll conflicts at runtime
+          # $env:NMAKE_LOCAL+="ZSTD_CFLAGS = -I`$(SDK_PREFIX)\include`n"
+          # $env:NMAKE_LOCAL+="ZSTD_LIBS = `$(SDK_PREFIX)\dll\libzstd.dll.a`n"
+          $env:NMAKE_LOCAL+="WEBP_ENABLED=YES`n"
+          $env:NMAKE_LOCAL+="WEBP_CFLAGS = -I`$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\include`n"
+          $env:NMAKE_LOCAL+="WEBP_LIBS = /NODEFAULTLIB:libcmt.lib `$(SDK_PREFIX)\libwebp-$env:LIBWEBP_VERSION-windows-$env:LIBWEBP_ARCH\lib\libwebp.lib`n"
+          $env:NMAKE_LOCAL+="LIBDEFLATE_CFLAGS = -I`$(SDK_PREFIX)`n"
+          $env:NMAKE_LOCAL+="LIBDEFLATE_LIB = `$(SDK_PREFIX)\libdeflate.lib`n"
+          $env:NMAKE_LOCAL | Set-Content "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
+          Get-Content -Path "$env:GITHUB_WORKSPACE\gdal-build\nmake.local"
+          $env:PATH="$env:PROJ_INSTALL_DIR\bin;$env:PATH"
+          nmake /f makefile.vc MSVC_VER=$env:MSVC_VER $env:WIN64_ARG $env:USER_DEFS devinstall
+  build:
+    needs: deps
+    name: Build Wheels
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        targetplatform: [x86, x64]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    env:
+      SDK: release-1911
+      GDAL_VERSION: ${{ github.event.inputs.gdal-version }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.rasterio-ref }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.targetplatform }}
+      - name: setup environment
+        shell: pwsh
+        run: |
+            if("${{ matrix.targetplatform }}" -eq "x64") {$env:SDK_ARCH="-x64"} else {$env:SDK_ARCH=""}
+            $env:SDK_PREFIX="$env:GITHUB_WORKSPACE\sdk\$env:SDK$env:SDK_ARCH"
+            $env:PROJ_INSTALL_DIR="$env:GITHUB_WORKSPACE\proj-install"
+            $env:GDAL_INSTALL_DIR="$env:GITHUB_WORKSPACE\gdal-install"
+            echo "SDK_ARCH=$env:SDK_ARCH" >> $env:GITHUB_ENV
+            echo "SDK_PREFIX=$env:SDK_PREFIX" >> $env:GITHUB_ENV
+            echo "PROJ_INSTALL_DIR=$env:PROJ_INSTALL_DIR" >> $env:GITHUB_ENV
+            echo "GDAL_INSTALL_DIR=$env:GDAL_INSTALL_DIR" >> $env:GITHUB_ENV
+            
+      - name: get cache dirs
+        id: get-cache-dirs
+        run: |
+          echo "::set-output name=dir::$env:GITHUB_WORKSPACE\sdk"
+          echo "::set-output name=proj-dir::$env:PROJ_INSTALL_DIR"
+          echo "::Set-output name=gdal-dir::$env:GDAL_INSTALL_DIR"
+      - name: cache deps
+        uses: actions/cache@v2
+        id: cache-deps
+        with:
+          path: |
+            ${{ steps.get-cache-dirs.outputs.dir }}
+            ${{ steps.get-cache-dirs.outputs.proj-dir }}
+            ${{ steps.get-cache-dirs.outputs.gdal-dir }}
+          key: ${{ runner.os }}-${{ matrix.targetplatform }}-gdal-${{ github.event.inputs.gdal-version }}-proj-${{ github.event.inputs.proj-version }}-rasterio-${{ github.event.inputs.rasterio-ref }}
+      - name: wheel
+        shell: pwsh
+        run: |
+            cd $env:GITHUB_WORKSPACE
+            $env:INCLUDE="$env:GDAL_INSTALL_DIR\include"
+            $env:LIB="$env:GDAL_INSTALL_DIR\lib"
+            $env:LINK="$env:GDAL_INSTALL_DIR\lib\gdal_i.lib"
+            pip install wheel delvewheel
+            $env:PACKAGE_DATA="YES"
+            $env:GDAL_DATA="$env:GDAL_INSTALL_DIR\data"
+            $env:PROJ_LIB="$env:PROJ_INSTALL_DIR\share\proj"
+            # rasterio looks for proj.dll not e.g. proj_7_2.dll
+            Copy-Item -Path "$env:PROJ_INSTALL_DIR\bin\proj*dll" -Destination "$env:PROJ_INSTALL_DIR\bin\proj.dll"
+            $env:PATH="$env:GDAL_INSTALL_DIR\bin;$env:PROJ_INSTALL_DIR\bin;$env:SDK_PREFIX\bin;$env:SDK_PREFIX\dll;$env:SDK_PREFIX;$env:PATH"
+            # does this help with conda?
+            $env:DISTUTILS_USE_SDK=1
+            $env:MSSdk=1
+            pip wheel --no-deps .
+            $wheel = get-ChildItem rasterio*whl | Select-Object -Expand Name
+            delvewheel repair -v --add-path="$env:GDAL_INSTALL_DIR\bin" --add-path="$env:PROJ_INSTALL_DIR\bin" --add-path="$env:SDK_PREFIX" --add-path="$env:SDK_PREFIX\bin" --add-path="$end:SDK_PREFIX\dll" --add-dll="vcruntime140.dll;vcruntime140_1.dll;msvcp140.dll" $wheel
+            pip install -U wheelhouse/$wheel
+      - name: upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: rasterio-wheel-py${{ matrix.python-version}}-${{ matrix.targetplatform }}
+          path: wheelhouse/rasterio*.whl
+      - name: test
+        continue-on-error: true
+        run: |
+            # at the moment tests fail on win
+            pip install -Ur requirements-dev.txt
+            pip freeze
+            mkdir tmp
+            cd tmp
+            Copy-Item  -Path "..\tests" -Destination "." -Recurse
+            $env:PROJ_NETWORK="ON"
+            python -m pytest -vv tests -m "not gdalbin" -k "not test_ensure_env_decorator_sets_gdal_data_prefix and not test_tiled_dataset_blocksize_guard and not test_untiled_dataset_blocksize and not test_positional_calculation_byindex and not test_transform_geom_polygon"
+  bundle:
+    needs: build
+    name: zip wheels into single artifact
+    runs-on: windows-latest
+    steps:
+      - name: collect
+        uses: actions/download-artifact@v2
+        with: 
+          path: collection
+      - name: zip
+        run: |
+          cd collection
+          Move-Item -Path "*\*.whl" -Destination "."
+          7z a rasterio-wheels-all.zip "*.whl"
+      - name: upload bundle
+        uses: actions/upload-artifact@v2
+        with:
+          name: rasterio-wheels-all.zip
+          path: collection\rasterio-wheels-all.zip

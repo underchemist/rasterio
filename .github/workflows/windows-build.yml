@@ -328,6 +328,7 @@ jobs:
         shell: pwsh
         run: |
             cd $env:GITHUB_WORKSPACE
+            cl.exe
             $env:INCLUDE="$env:GDAL_INSTALL_DIR\include"
             $env:LIB="$env:GDAL_INSTALL_DIR\lib"
             $env:LINK="$env:GDAL_INSTALL_DIR\lib\gdal_i.lib"

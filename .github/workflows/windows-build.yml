@@ -358,7 +358,10 @@ jobs:
       - name: test
         continue-on-error: true
         run: |
-            # at the moment tests fail on win
+            # remove deps to ensure we're using included dlls
+            Remove-Item $env:SDK_PREFIX -Recurse
+            Remove-Item $env:PROJ_INSTALL_DIR -Recurse
+            Remove-Item $env:GDAL_INSTALL_DIR -Recurse
             pip install -Ur requirements-dev.txt
             pip freeze
             mkdir tmp

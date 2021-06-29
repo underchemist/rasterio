@@ -17,8 +17,9 @@ log.addHandler(logging.NullHandler())
 def add_gdal_dll_directories():
     dll_dirs = []
     dll_directory = os.path.dirname(__file__) + '.libs'
+    is_conda = os.path.exists(os.path.join(sys.prefix, 'conda-meta'))
     if platform.system() == 'Windows':
-        if sys.version_info >= (3, 8):
+        if sys.version_info >= (3, 8) and not is_conda:
             if os.path.exists(dll_directory):
                 dll_dirs.append(os.add_dll_directory(dll_directory))
             else:

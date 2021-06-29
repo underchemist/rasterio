@@ -311,6 +311,9 @@ jobs:
             echo LIB=%LIB%>> %GITHUB_ENV%
             echo LIBPATH=%LIBPATH%>> %GITHUB_ENV%
             echo %PATH%
+            echo %INCLUDE%
+            echo %LIB%
+            echo %LIBPATH%
       - name: get cache dirs
         id: get-cache-dirs
         run: |

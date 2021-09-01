@@ -1,4 +1,4 @@
-# cython: language_level=3, boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
+# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8"""
 
 """Numpy-free base classes."""
 
@@ -608,6 +608,9 @@ cdef class DatasetBase:
     property mask_flag_enums:
         """Sets of flags describing the sources of band masks.
 
+        Parameters
+        ----------
+
         all_valid: There are no invalid pixels, all mask values will be
             255. When used this will normally be the only flag set.
         per_dataset: The mask band is shared between all bands on the
@@ -670,7 +673,7 @@ cdef class DatasetBase:
         raise DatasetAttributeError("read-only attribute")
 
     def _set_all_units(self, value):
-        raise DatasetAttributeError("read-only attribute") 
+        raise DatasetAttributeError("read-only attribute")
 
     property descriptions:
         """Descriptions for each dataset band
@@ -1204,8 +1207,13 @@ cdef class DatasetBase:
         """Returns a sequence of ``ColorInterp.<enum>`` representing
         color interpretation in band order.
 
+        Examples
+        --------
+
         To set color interpretation, provide a sequence of
         ``ColorInterp.<enum>``:
+
+        .. code-block:: python
 
             import rasterio
             from rasterio.enums import ColorInterp
@@ -1265,7 +1273,28 @@ cdef class DatasetBase:
                     GDALSetRasterColorInterpretation(self.band(bidx), <GDALColorInterp>ci.value))
 
     def colormap(self, bidx):
-        """Returns a dict containing the colormap for a band or None."""
+        """Returns a dict containing the colormap for a band.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band whose colormap will be returned. Band index
+            starts at 1.
+
+        Returns
+        -------
+        dict
+            Mapping of color index value (starting at 0) to RGBA color as a
+            4-element tuple.
+
+        Raises
+        ------
+        ValueError
+            If no colormap is found for the specified band (NULL color table).
+        IndexError
+            If no band exists for the provided index.
+
+        """
         cdef GDALRasterBandH band = NULL
         cdef GDALColorTableH colortable = NULL
         cdef GDALColorEntry *color = NULL

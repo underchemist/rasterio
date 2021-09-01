@@ -106,8 +106,8 @@ class WindowMethodsMixin:
 
 
 def iter_args(function):
-    """Decorator to allow function to take either *args or
-    a single iterable which gets expanded to *args.
+    """Decorator to allow function to take either ``*args`` or
+    a single iterable which gets expanded to ``*args``.
     """
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -527,6 +527,8 @@ class Window:
     width, height: float
         Lengths of the window.
 
+    Notes
+    -----
     Previously the lengths were called 'num_cols' and 'num_rows' but
     this is a bit confusing in the new float precision world and the
     attributes have been changed. The originals are deprecated.

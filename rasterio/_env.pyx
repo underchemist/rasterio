@@ -92,7 +92,7 @@ def driver_count():
 
 cpdef get_gdal_config(key, normalize=True):
     """Get the value of a GDAL configuration option.  When requesting
-    ``GDAL_CACHEMAX`` the value is returned unaltered. 
+    ``GDAL_CACHEMAX`` the value is returned unaltered.
 
     Parameters
     ----------
@@ -356,7 +356,7 @@ cdef class GDALEnv(ConfigEnv):
                             log.debug("GDAL data found in package: path=%r.", path)
                             self.update_config_options(GDAL_DATA=path)
 
-                        # See https://github.com/mapbox/rasterio/issues/1631.
+                        # See https://github.com/rasterio/rasterio/issues/1631.
                         elif GDALDataFinder().find_file("header.dxf"):
                             log.debug("GDAL data files are available at built-in paths.")
 
@@ -433,6 +433,6 @@ def set_proj_data_search_path(path):
         path_b = path.encode("utf-8")
         path_c = path_b
         paths = CSLAddString(paths, path_c)
-        OSRSetPROJSearchPaths(paths)
+        OSRSetPROJSearchPaths(<const char *const *>paths)
     ELSE:
         os.environ["PROJ_LIB"] = path

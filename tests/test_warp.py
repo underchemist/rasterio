@@ -1446,7 +1446,7 @@ def test_resample_no_invert_proj(method):
     ):
         pytest.xfail(
             reason="Some resampling methods succeed but produce blank images. "
-            "See https://github.com/mapbox/rasterio/issues/614"
+            "See https://github.com/rasterio/rasterio/issues/614"
         )
 
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
@@ -2003,8 +2003,8 @@ def http_error_server(data):
 
 @requires_gdal3
 @pytest.mark.skipif(
-    sys.version_info < (3, 7),
-    reason="Python 3.7 required to serve the data fixture directory",
+    sys.version_info < (3, 7) and sys.platform != "linux",
+    reason="Python 3.7 required to serve the data fixture directory and the server fixture requires Linux",
 )
 def test_reproject_error_propagation(http_error_server, caplog):
     """Propagate errors up from ChunkAndWarpMulti and check for a retry."""

@@ -68,11 +68,16 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [macos-latest]
+        sys:
+          - { os: macos-latest, shell: bash }
+          - { os: windows-latest, shell: cmd }
         python-version: ['3.8' , '3.9']
         include:
           - os: ubuntu-latest
             python-version: '3.10'
+    defaults:
+      run:
+        shell: ${{ matrix.sys.shell }}
     steps:
       - uses: actions/checkout@v2
 
@@ -82,34 +87,30 @@ jobs:
           conda-channels: conda-forge
 
       - name: Install Env
-        shell: bash
         run: |
           conda config --prepend channels conda-forge
           conda config --set channel_priority strict
           conda create -n test python=${{ matrix.python-version }} libgdal cython=0.29 numpy
-          source activate test
+          conda activate test
           python -m pip install -e . --no-use-pep517 || python -m pip install -e .
           python -m pip install -r requirements-dev.txt
 
       - name: Check and Log Environment
-        shell: bash
         run: |
-          source activate test
+          conda activate test
           python -V
           conda info
 
       - name: Test with Coverage (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
-        shell: bash
         run: |
-          source activate test
+          conda activate test
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
 
       - name: Test with Coverage (OSX)
         if: matrix.os == 'macos-latest'
-        shell: bash
         run: |
-          source activate test
+          conda activate test
           python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"
 
       - uses: codecov/codecov-action@v1

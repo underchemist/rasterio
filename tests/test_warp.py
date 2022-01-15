@@ -11,6 +11,7 @@ from numpy.testing import assert_almost_equal
 import pytest
 
 import rasterio
+from rasterio._err import CPLE_AppDefinedError
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -19,6 +20,7 @@ from rasterio.errors import (
     CRSError,
     GDALVersionError,
     TransformError,
+    RPCError,
     WarpOperationError,
 )
 from rasterio.warp import (
@@ -309,7 +311,10 @@ def test_transform_bounds_no_change():
 
 
 def test_transform_bounds_densify_out_of_bounds():
-    with pytest.raises(ValueError):
+    error = ValueError
+    if gdal_version.at_least('3.4'):
+        error = CPLE_AppDefinedError
+    with pytest.raises(error):
         transform_bounds(
             CRS.from_epsg(4326),
             CRS.from_epsg(32610),
@@ -2023,3 +2028,16 @@ def test_reproject_error_propagation(http_error_server, caplog):
             )
 
     assert len([rec for rec in caplog.records if "Retrying again" in rec.message]) == 2
+
+
+def test_rpcs_non_epsg4326():
+    with pytest.raises(RPCError):
+        with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+            src_rpcs = src.rpcs
+            reproject(
+                rasterio.band(src, src.indexes),
+                src_crs="EPSG:3857",
+                rpcs=src_rpcs,
+                dst_crs="EPSG:4326",
+                resampling=Resampling.nearest,
+            )

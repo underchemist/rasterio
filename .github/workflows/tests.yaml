@@ -71,12 +71,11 @@ jobs:
         include:
           - { os: macos-latest, shell: bash }
           - { os: windows-latest, shell: cmd }
-          - os: ubuntu-latest
-            python-version: '3.10'
+          - {os: ubuntu-latest, shell: bash, python-version: '3.10'}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        shell: ${{ matrix.shell }}
+        shell: ${{ matrix.shell }} {0}
     steps:
       - uses: actions/checkout@v2
 

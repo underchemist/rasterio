@@ -63,8 +63,8 @@ jobs:
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
   conda_test:
-    name: Conda | ${{ matrix.os }} | python=${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
+    name: Conda | ${{ matrix.sys.os }} | python=${{ matrix.python-version }}
+    runs-on: ${{ matrix.sys.os }}
     strategy:
       fail-fast: true
       matrix:
@@ -102,13 +102,13 @@ jobs:
           conda info
 
       - name: Test with Coverage (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.sys.os == 'ubuntu-latest'
         run: |
           conda activate test
           python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing -k "not issue2353"
 
       - name: Test with Coverage (OSX)
-        if: matrix.os == 'macos-latest'
+        if: matrix.sys.os == 'macos-latest'
         run: |
           conda activate test
           python -m pytest -v -m "not wheel" -rxXs  --cov rasterio --cov-report term-missing -k "not test_target_aligned_pixels and not test_reproject_error_propagation and not test_outer_boundless_pixel_fidelity and not issue2353"

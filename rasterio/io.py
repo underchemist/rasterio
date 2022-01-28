@@ -274,7 +274,7 @@ def get_writer_for_driver(driver):
         cls = DatasetWriter
     elif driver_can_create_copy(driver):  # pragma: no branch
         if driver == 'COG':
-            raise DriverCapabilityError("{0} driver does not support 'w' or 'w+' modes.".format(driver))
+            raise DriverCapabilityError("{0} driver only supports CreateCopy capabilities and does not support 'w' or 'w+' modes. ".format(driver))
         cls = BufferedDatasetWriter
     return cls
 
